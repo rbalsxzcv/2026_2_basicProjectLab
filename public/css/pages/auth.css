@@ -1,0 +1,75 @@
+/*
+ * 파일: public/css/pages/auth.css
+ * 역할: 로그인 · 회원가입 화면 스타일 (세로 가운데 정렬, 연한 초록 그라데이션 배경)
+ * 담당: C3
+ */
+
+.auth-page {
+  min-height: calc(100dvh - var(--header-h) - 48px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-5);
+  padding: var(--space-5) 0;
+}
+
+/* 로그인 화면일 때만 본문 배경을 연한 초록 그라데이션으로 */
+#page:has(.auth-page) {
+  background: linear-gradient(180deg, var(--color-primary-soft) 0%, var(--color-bg) 70%);
+  min-height: calc(100dvh - var(--header-h));
+}
+
+.auth-logo {
+  text-align: center;
+  margin-top: var(--space-5);
+}
+
+.auth-logo-small {
+  margin-top: 0;
+}
+
+.auth-logo-icon {
+  font-size: 56px;
+  line-height: 1.1;
+  display: inline-block;
+  transform-origin: 50% 100%;
+  animation: sprout-sway 3s ease-in-out infinite;
+}
+
+.auth-logo-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--color-primary-dark);
+  margin-top: var(--space-2);
+}
+
+.auth-logo-sub {
+  color: var(--color-muted);
+  font-size: 14px;
+  margin-top: var(--space-1);
+}
+
+.auth-form {
+  gap: var(--space-4);
+}
+
+.password-wrap {
+  position: relative;
+}
+
+.password-wrap .input {
+  padding-right: 72px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.auth-switch {
+  text-align: center;
+  font-size: 14px;
+  color: var(--color-muted);
+}

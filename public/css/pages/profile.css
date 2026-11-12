@@ -1,0 +1,79 @@
+/*
+ * 파일: public/css/pages/profile.css
+ * 역할: 내 정보 화면 스타일 (카드 간격 12px, 화살표가 있는 메뉴 목록)
+ * 담당: C3
+ */
+
+.profile-page {
+  gap: 12px;
+}
+
+.profile-name-row {
+  justify-content: space-between;
+}
+
+.profile-nickname {
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.nick-form .input {
+  flex: 1;
+}
+
+.profile-card-head {
+  justify-content: space-between;
+  margin-bottom: var(--space-2);
+}
+
+.info-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.info-list div {
+  display: flex;
+  justify-content: space-between;
+}
+
+.info-list dt {
+  color: var(--color-muted);
+  font-size: 14px;
+}
+
+.info-list dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.menu-list {
+  padding: 0;
+  overflow: hidden;
+}
+
+.menu-list li + li {
+  border-top: 1px solid var(--color-border);
+}
+
+.menu-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  min-height: 52px;
+  padding: 0 var(--space-4);
+  background: none;
+  border: none;
+  text-align: left;
+  text-decoration: none;
+  color: var(--color-text);
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.menu-row span:last-child {
+  color: var(--color-muted);
+  font-size: 20px;
+}

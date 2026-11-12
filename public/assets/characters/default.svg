@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="웃는 새싹 화분 캐릭터">
+  <!-- 기본 캐릭터: 사진이 없거나 캐릭터 만들기에 실패했을 때 사용 (C4) -->
+  <ellipse cx="100" cy="186" rx="54" ry="8" fill="#2F3A33" opacity="0.08"/>
+  <!-- 줄기 -->
+  <path d="M100 96 C 97 80, 98 66, 100 54" stroke="#3F8A57" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <!-- 새싹 잎 두 장 -->
+  <path d="M100 58 C 84 30, 52 34, 46 52 C 62 66, 88 68, 100 58 Z" fill="#8FCB9B"/>
+  <path d="M100 58 C 116 30, 148 34, 154 52 C 138 66, 112 68, 100 58 Z" fill="#7DBF8C"/>
+  <path d="M100 58 C 84 48, 66 46, 56 50" stroke="#5BA672" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.6"/>
+  <path d="M100 58 C 116 48, 134 46, 144 50" stroke="#5BA672" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.6"/>
+  <!-- 둥근 화분 -->
+  <path d="M48 100 h104 l-10 76 a12 12 0 0 1 -12 10 h-60 a12 12 0 0 1 -12 -10 z" fill="#F7D9BF"/>
+  <rect x="42" y="90" width="116" height="20" rx="10" fill="#F2B880"/>
+  <!-- 얼굴 -->
+  <circle cx="80" cy="136" r="6.5" fill="#2F3A33"/>
+  <circle cx="120" cy="136" r="6.5" fill="#2F3A33"/>
+  <circle cx="82.5" cy="133.5" r="2.2" fill="#FFFFFF"/>
+  <circle cx="122.5" cy="133.5" r="2.2" fill="#FFFFFF"/>
+  <ellipse cx="67" cy="151" rx="9" ry="5.5" fill="#F2A7A0" opacity="0.55"/>
+  <ellipse cx="133" cy="151" rx="9" ry="5.5" fill="#F2A7A0" opacity="0.55"/>
+  <path d="M89 150 q11 11 22 0" stroke="#2F3A33" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+</svg>
