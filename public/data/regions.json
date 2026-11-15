@@ -1,0 +1,23 @@
+{
+  "_note": "시·도청 소재지의 대략 좌표(소수 둘째 자리). core/weather.js 가 사용하므로 키 이름을 바꾸지 마세요.",
+  "regions": [
+    { "id": "seoul", "name": "서울특별시", "lat": 37.57, "lon": 126.98 },
+    { "id": "busan", "name": "부산광역시", "lat": 35.18, "lon": 129.08 },
+    { "id": "daegu", "name": "대구광역시", "lat": 35.87, "lon": 128.6 },
+    { "id": "incheon", "name": "인천광역시", "lat": 37.46, "lon": 126.71 },
+    { "id": "gwangju", "name": "광주광역시", "lat": 35.16, "lon": 126.85 },
+    { "id": "daejeon", "name": "대전광역시", "lat": 36.35, "lon": 127.38 },
+    { "id": "ulsan", "name": "울산광역시", "lat": 35.54, "lon": 129.31 },
+    { "id": "sejong", "name": "세종특별자치시", "lat": 36.48, "lon": 127.29 },
+    { "id": "gyeonggi", "name": "경기도", "lat": 37.29, "lon": 127.05 },
+    { "id": "gangwon", "name": "강원특별자치도", "lat": 37.89, "lon": 127.73 },
+    { "id": "chungbuk", "name": "충청북도", "lat": 36.64, "lon": 127.49 },
+    { "id": "chungnam", "name": "충청남도", "lat": 36.66, "lon": 126.67 },
+    { "id": "jeonbuk", "name": "전북특별자치도", "lat": 35.82, "lon": 127.11 },
+    { "id": "jeonnam", "name": "전라남도", "lat": 34.82, "lon": 126.46 },
+    { "id": "gyeongbuk", "name": "경상북도", "lat": 36.58, "lon": 128.51 },
+    { "id": "gyeongnam", "name": "경상남도", "lat": 35.24, "lon": 128.69 },
+    { "id": "jeju", "name": "제주특별자치도", "lat": 33.49, "lon": 126.5 }
+  ],
+  "homeTypes": ["아파트", "단독주택", "원룸·오피스텔", "기숙사", "기타"]
+}

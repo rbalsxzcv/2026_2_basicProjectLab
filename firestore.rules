@@ -1,0 +1,17 @@
+rules_version = '2';
+
+// Firebase 콘솔 → Firestore → 규칙 탭에 붙여 넣고 게시
+// ※ rules_version 줄은 반드시 맨 첫 줄에 있어야 합니다. (앞에 주석이 있으면 Parse error)
+//
+// 규칙 요약: 로그인한 사람은 users/{자기 uid} 아래의 데이터만 읽고 쓸 수 있습니다.
+//           (다른 사람의 식물·기록은 절대 볼 수 없음)
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+      match /{document=**} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+    }
+  }
+}

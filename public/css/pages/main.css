@@ -1,0 +1,388 @@
+/*
+ * 파일: public/css/pages/main.css
+ * 역할: 메인 게임 화면 스타일 — 캐릭터 무대, 상태별 애니메이션, 레벨 바, 체크리스트 카드, 메뉴
+ * 담당: C6
+ *
+ * 상태별 표현 (Anti-Guilt: 시듦·울음·회색 처리 없음)
+ *   PEACEFUL 좌우로 살랑 / WAITING 천천히 숨쉬기 + "…" / ALERT 옆에서 돋보기가 흔들 / GROWING 반짝이 + 통통
+ */
+
+.main-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* ===== 인사 ===== */
+.greeting-text {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+/* ===== 식물 고르기 ===== */
+.plant-selector {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  padding: 2px 2px var(--space-1);
+  scrollbar-width: none;
+}
+
+.plant-selector::-webkit-scrollbar {
+  display: none;
+}
+
+.selector-chip {
+  min-height: 44px;
+  padding: 0 var(--space-3) 0 var(--space-1);
+  text-decoration: none;
+  color: inherit;
+  flex-shrink: 0;
+}
+
+.selector-chip img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  border-radius: 50%;
+  background: var(--color-primary-soft);
+}
+
+.selector-add {
+  padding: 0 var(--space-4);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+}
+
+.plant-name-only {
+  font-size: 20px;
+  font-weight: 800;
+  text-align: center;
+}
+
+/* ===== 캐릭터 무대 ===== */
+.stage {
+  position: relative;
+  height: 300px;
+  border-radius: 24px;
+  background: radial-gradient(circle at 50% 45%, #ffffff 0%, var(--color-primary-soft) 60%, #d8eedd 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding-bottom: 28px;
+  overflow: hidden;
+}
+
+.floor-shadow {
+  position: absolute;
+  bottom: 22px;
+  width: 140px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(47, 58, 51, 0.1);
+  transform: scale(var(--char-scale, 0.9));
+}
+
+/* 말풍선 */
+.bubble {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 86%;
+  padding: var(--space-2) var(--space-4);
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: var(--shadow);
+  font-size: 14px;
+  text-align: center;
+  z-index: 2;
+}
+
+.bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -7px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 8px solid transparent;
+  border-top-color: #ffffff;
+  border-bottom: 0;
+}
+
+/* WAITING 말풍선 "…" */
+.dots i {
+  font-style: normal;
+  display: inline-block;
+  animation: dot-blink 1.4s infinite;
+}
+
+.dots i:nth-child(2) { animation-delay: 0.2s; }
+.dots i:nth-child(3) { animation-delay: 0.4s; }
+
+.alert-link {
+  position: absolute;
+  top: 66px;
+  z-index: 2;
+}
+
+/* 캐릭터 */
+.character-wrap {
+  position: relative;
+  width: calc(220px * var(--char-scale, 0.9));
+  max-width: 220px;
+  z-index: 1;
+  cursor: pointer;
+  touch-action: pan-y; /* 좌우 문지르기는 쓰다듬기, 위아래는 스크롤 */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transform-origin: 50% 100%;
+  outline: none;
+}
+
+.character-wrap:focus-visible {
+  outline: 3px solid rgba(91, 166, 114, 0.4);
+  outline-offset: 6px;
+  border-radius: 24px;
+}
+
+.character-body {
+  position: relative;
+  transform-origin: 50% 100%;
+}
+
+.character-img {
+  width: 100%;
+  max-width: 220px;
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* 소품 (레벨이 오르면 열림) */
+.deco {
+  position: absolute;
+  pointer-events: none;
+}
+
+.deco-ribbon {
+  width: 34%;
+  left: 33%;
+  bottom: 30%;
+}
+
+.deco-butterfly {
+  width: 26%;
+  right: -10%;
+  top: 0;
+  animation: flutter 2.4s ease-in-out infinite;
+}
+
+.deco-star {
+  width: 20%;
+  left: 40%;
+  top: -14%;
+  animation: twinkle 2s ease-in-out infinite;
+}
+
+/* ===== 상태별 동작 ===== */
+.state-peaceful .character-wrap {
+  animation: sway 3s ease-in-out infinite;
+}
+
+.state-waiting .character-wrap {
+  animation: breathe 4s ease-in-out infinite;
+}
+
+.state-alert .character-wrap {
+  animation: sway 4s ease-in-out infinite;
+}
+
+.state-growing .character-wrap {
+  animation: bounce 1.2s ease-in-out infinite;
+}
+
+/* ALERT: 옆에서 천천히 흔들리는 돋보기 (빨강·느낌표 없음) */
+.magnifier {
+  position: absolute;
+  right: -28px;
+  top: 28%;
+  font-size: 30px;
+  animation: wiggle 2.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* GROWING: 위로 퍼지는 작은 반짝이 */
+.sparkles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.sparkles i {
+  position: absolute;
+  bottom: 30%;
+  left: calc(10% + var(--i) * 12%);
+  font-style: normal;
+  font-size: 14px;
+  color: #f2c766;
+  opacity: 0;
+  animation: sparkle 1.8s ease-out infinite;
+  animation-delay: calc(var(--i) * 0.25s);
+}
+
+/* 쓰다듬기 반응 */
+.character-body.is-squish {
+  animation: squish 0.45s ease;
+}
+
+.pet-heart {
+  position: absolute;
+  left: 50%;
+  top: 10%;
+  font-size: 24px;
+  pointer-events: none;
+  animation: float-up 1.2s ease-out forwards;
+}
+
+/* ===== 레벨 바 ===== */
+.level-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.level-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.exp-track {
+  height: 12px;
+  border-radius: 999px;
+  background: #edf0ea;
+  overflow: hidden;
+}
+
+.exp-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #9fd3a8, var(--color-primary));
+  transition: width 0.6s ease;
+}
+
+/* ===== 체크리스트 카드 ===== */
+.checklist-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  text-decoration: none;
+  color: inherit;
+  border: 2px solid var(--color-primary);
+  background: linear-gradient(135deg, #ffffff 0%, var(--color-primary-soft) 100%);
+}
+
+.checklist-summary {
+  margin-top: var(--space-2);
+  font-weight: 700;
+  color: var(--color-primary-dark);
+}
+
+/* ===== 메뉴 2×2 ===== */
+.menu-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+.menu-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-4) var(--space-2);
+  text-decoration: none;
+  color: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  min-height: 88px;
+}
+
+.menu-icon {
+  font-size: 28px;
+  line-height: 1;
+}
+
+/* ===== 키프레임 ===== */
+@keyframes sway {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(3deg); }
+}
+
+@keyframes breathe {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-4px) scale(1.015); }
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-10px); }
+  60% { transform: translateY(-6px); }
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(-12deg) translateY(0); }
+  50% { transform: rotate(12deg) translateY(-4px); }
+}
+
+@keyframes sparkle {
+  0% { opacity: 0; transform: translateY(0) scale(0.6); }
+  30% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-90px) scale(1.1); }
+}
+
+@keyframes squish {
+  0% { transform: scale(1, 1); }
+  35% { transform: scale(1.12, 0.86); }
+  65% { transform: scale(0.95, 1.06); }
+  100% { transform: scale(1, 1); }
+}
+
+@keyframes float-up {
+  from { opacity: 1; transform: translate(-50%, 0); }
+  to { opacity: 0; transform: translate(-50%, -70px); }
+}
+
+@keyframes flutter {
+  0%, 100% { transform: translate(0, 0) rotate(-6deg); }
+  50% { transform: translate(-4px, -6px) rotate(6deg); }
+}
+
+@keyframes dot-blink {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 1; }
+}
+
+/* 움직임 줄이기: 모든 동작을 끄고 상태는 말풍선 글자로만 전달 */
+@media (prefers-reduced-motion: reduce) {
+  .character-wrap,
+  .character-body,
+  .magnifier,
+  .sparkles i,
+  .deco,
+  .dots i,
+  .pet-heart {
+    animation: none !important;
+  }
+
+  .sparkles,
+  .pet-heart {
+    display: none;
+  }
+}

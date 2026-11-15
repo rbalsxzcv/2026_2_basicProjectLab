@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60" role="img" aria-label="반짝 별">
+  <!-- Lv.8 소품: 반짝 별 (C6) -->
+  <path d="M30 4 L37 21 L55 22 L41 34 L46 52 L30 42 L14 52 L19 34 L5 22 L23 21 Z" fill="#FBE29A" stroke="#F2C766" stroke-width="2.5" stroke-linejoin="round"/>
+  <circle cx="24" cy="28" r="2.5" fill="#2F3A33"/>
+  <circle cx="36" cy="28" r="2.5" fill="#2F3A33"/>
+  <path d="M26 34 q4 4 8 0" stroke="#2F3A33" stroke-width="2" fill="none" stroke-linecap="round"/>
+</svg>

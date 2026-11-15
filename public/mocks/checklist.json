@@ -1,0 +1,7 @@
+{
+  "items": [
+    { "category": "DAILY_MICRO", "taskType": "VENTILATE", "title": "창문 열고 10분 환기하기" },
+    { "category": "DAILY_MICRO", "taskType": "CHECK_LEAF", "title": "잎 앞뒷면 가볍게 눈맞춤하기" },
+    { "category": "PERIODIC_CARE", "taskType": "WATER", "title": "물 듬뿍 주기 (이 항목은 걸러져야 해요)" }
+  ]
+}

@@ -1,0 +1,558 @@
+/*
+ * 파일: public/css/components.css
+ * 역할: ui/components.js 와 모든 페이지가 함께 쓰는 공용 컴포넌트 스타일
+ * 담당: C1 (celebrate 관련은 C6)
+ */
+
+/* ===== 버튼 ===== */
+/* 기본 버튼 모양 (터치하기 쉽게 최소 높이 44px) */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: 0 var(--space-4);
+  border: 1.5px solid transparent;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  background: transparent;
+  transition: transform 0.1s ease, background-color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn:focus-visible,
+.input:focus-visible,
+.select:focus-visible,
+.textarea:focus-visible {
+  outline: 3px solid rgba(91, 166, 114, 0.4);
+  outline-offset: 2px;
+}
+
+/* 초록으로 꽉 찬 주 버튼 */
+.btn-primary {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+/* 초록 테두리 버튼 */
+.btn-secondary {
+  border-color: var(--color-primary);
+  color: var(--color-primary-dark);
+  background: var(--color-surface);
+}
+
+/* 글자만 있는 버튼 */
+.btn-ghost {
+  color: var(--color-primary-dark);
+  background: transparent;
+}
+
+/* 가로 꽉 채우기 */
+.btn-block {
+  display: flex;
+  width: 100%;
+}
+
+/* 작은 버튼 */
+.btn-sm {
+  min-height: 36px;
+  padding: 0 var(--space-3);
+  font-size: 13px;
+}
+
+/* 누를 수 없는 상태 */
+.btn:disabled,
+.btn[aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ===== 카드 ===== */
+/* 둥근 모서리 + 부드러운 그림자 상자 */
+.card {
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: var(--space-4);
+}
+
+/* 카드 제목 */
+.card-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: var(--space-1);
+}
+
+/* 카드 보조 문구 */
+.card-sub {
+  font-size: 13px;
+  color: var(--color-muted);
+}
+
+/* ===== 입력 폼 ===== */
+/* 라벨 + 입력 + 오류 문구 한 묶음 */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+/* 입력 칸 이름 */
+.label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* 한 줄 입력 / 선택 / 여러 줄 입력 */
+.input,
+.select,
+.textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: var(--space-2) var(--space-3);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font-size: 16px; /* 16px 미만이면 iOS가 화면을 확대함 */
+}
+
+.input:disabled,
+.select:disabled {
+  background: #f1f3ef;
+  color: var(--color-muted);
+}
+
+.textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+/* 오류 문구 (빨강 대신 진한 살구색) */
+.field-error {
+  font-size: 13px;
+  color: var(--color-accent-dark);
+  min-height: 1em;
+}
+
+.field-error:empty {
+  display: none;
+}
+
+/* 켜기/끄기 스위치: <label class="toggle"><input type="checkbox"><span></span> 문구</label> */
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+  min-height: 44px;
+}
+
+.toggle input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+
+.toggle span {
+  position: relative;
+  width: 44px;
+  height: 26px;
+  border-radius: 999px;
+  background: var(--color-border);
+  transition: background-color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.toggle span::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease;
+}
+
+.toggle input:checked + span {
+  background: var(--color-primary);
+}
+
+.toggle input:checked + span::after {
+  transform: translateX(18px);
+}
+
+.toggle input:focus-visible + span {
+  outline: 3px solid rgba(91, 166, 114, 0.4);
+}
+
+/* ===== 칩 · 뱃지 · 태그 ===== */
+/* 선택용 둥근 버튼 */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 36px;
+  padding: 0 var(--space-3);
+  border-radius: 999px;
+  border: 1.5px solid var(--color-border);
+  background: var(--color-surface);
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* 선택된 칩 */
+.chip.is-active {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+  color: var(--color-primary-dark);
+  font-weight: 700;
+}
+
+/* 숫자 뱃지 (알림 개수) */
+.badge {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--color-accent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+}
+
+/* 상태 표시 태그 */
+.tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--color-primary-soft);
+  color: var(--color-primary-dark);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.tag.tag-accent {
+  background: var(--color-danger-soft);
+  color: var(--color-accent-dark);
+}
+
+/* ===== 모달 (아래에서 올라오는 시트) ===== */
+/* 화면 전체를 덮는 반투명 배경 */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(47, 58, 51, 0.4);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: fade-in 0.2s ease;
+}
+
+/* 시트 본체 */
+.modal {
+  width: 100%;
+  max-width: var(--shell-max);
+  max-height: 85dvh;
+  overflow-y: auto;
+  background: var(--color-surface);
+  border-radius: 20px 20px 0 0;
+  padding: var(--space-5) var(--space-4) calc(var(--space-4) + env(safe-area-inset-bottom));
+  box-shadow: 0 -4px 24px rgba(47, 58, 51, 0.12);
+  animation: sheet-up 0.25s ease;
+}
+
+/* 모달 제목 */
+.modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: var(--space-3);
+}
+
+/* 모달 내용 */
+.modal-body {
+  margin-bottom: var(--space-4);
+}
+
+/* 모달 버튼 영역 (버튼은 세로로 쌓임) */
+.modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes sheet-up {
+  from { transform: translateY(40px); opacity: 0.6; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* ===== 토스트 (하단 알림 문구) ===== */
+#toast-root {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + var(--space-3));
+  width: calc(100% - 32px);
+  max-width: calc(var(--shell-max) - 32px);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  pointer-events: none;
+}
+
+body.no-nav #toast-root {
+  bottom: calc(env(safe-area-inset-bottom) + var(--space-4));
+}
+
+/* 기본 토스트 */
+.toast {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  background: var(--color-text);
+  color: #fff;
+  font-size: 14px;
+  box-shadow: var(--shadow);
+  animation: toast-in 0.2s ease;
+}
+
+/* 성공 토스트 */
+.toast-success {
+  background: var(--color-primary-dark);
+}
+
+/* 문제 알림 토스트 (빨강 대신 살구색) */
+.toast-error {
+  background: var(--color-danger-soft);
+  color: var(--color-accent-dark);
+  border: 1px solid var(--color-accent);
+}
+
+.toast.is-leaving {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+@keyframes toast-in {
+  from { transform: translateY(8px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* ===== 로딩 ===== */
+/* 화면 전체 로딩 덮개 */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: rgba(251, 250, 246, 0.88);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  text-align: center;
+}
+
+/* 살랑살랑 흔들리는 새싹 모양 로딩 표시 */
+.spinner {
+  position: relative;
+  width: 40px;
+  height: 44px;
+  margin: 0 auto;
+  transform-origin: 50% 100%;
+  animation: sprout-sway 1.4s ease-in-out infinite;
+}
+
+.spinner::before,
+.spinner::after {
+  content: '';
+  position: absolute;
+  top: 6px;
+  width: 18px;
+  height: 12px;
+  background: var(--color-primary);
+  border-radius: 100% 0;
+}
+
+.spinner::before {
+  left: 2px;
+  transform: rotate(-10deg);
+}
+
+.spinner::after {
+  right: 2px;
+  transform: scaleX(-1) rotate(-10deg);
+}
+
+/* 새싹 줄기 */
+.spinner {
+  background: linear-gradient(var(--color-primary-dark), var(--color-primary-dark)) no-repeat 50% 100% / 3px 28px;
+}
+
+@keyframes sprout-sway {
+  0%, 100% { transform: rotate(-8deg); }
+  50% { transform: rotate(8deg); }
+}
+
+/* ===== 게이지 (0~100 막대) ===== */
+.gauge {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.gauge-track {
+  height: 12px;
+  border-radius: 999px;
+  background: #edf0ea;
+  overflow: hidden;
+}
+
+.gauge-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.6s ease;
+}
+
+.gauge-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--color-muted);
+}
+
+.gauge-label strong {
+  font-size: 18px;
+  color: var(--color-text);
+}
+
+.gauge.is-low .gauge-fill { background: var(--color-accent); }
+.gauge.is-mid .gauge-fill { background: #9fd3a8; }
+.gauge.is-high .gauge-fill { background: var(--color-primary); }
+
+/* ===== 빈 화면 안내 ===== */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-5) var(--space-4);
+  text-align: center;
+  color: var(--color-muted);
+}
+
+.empty-state-icon {
+  font-size: 48px;
+  line-height: 1;
+}
+
+.empty-state-message {
+  font-size: 15px;
+  white-space: pre-line;
+}
+
+/* ===== 오류 카드 · 설정 안내 카드 ===== */
+.error-card,
+.setup-card {
+  margin-top: var(--space-4);
+}
+
+.setup-card ol {
+  list-style: decimal;
+  padding-left: 1.2em;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: 14px;
+}
+
+.setup-card code {
+  background: #f1f3ef;
+  padding: 1px 4px;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+/* ===== 레벨업 축하 (C6, ui/celebrate.js) ===== */
+.celebrate {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  text-align: center;
+}
+
+.celebrate-img {
+  width: 160px;
+  height: 160px;
+  object-fit: contain;
+  animation: celebrate-pop 0.6s ease;
+}
+
+.celebrate-level {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--color-primary-dark);
+}
+
+.celebrate-spark {
+  position: absolute;
+  font-size: 20px;
+  animation: twinkle 1.6s ease-in-out infinite;
+}
+
+.celebrate-spark:nth-child(1) { top: 0; left: 18%; }
+.celebrate-spark:nth-child(2) { top: 20px; right: 16%; animation-delay: 0.4s; }
+.celebrate-spark:nth-child(3) { top: 110px; left: 12%; animation-delay: 0.8s; }
+
+@keyframes celebrate-pop {
+  0% { transform: scale(0.6); }
+  70% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+
+/* 버튼 위로 떠오르는 "+20 EXP" 글자 */
+.float-exp {
+  position: fixed;
+  z-index: 250;
+  pointer-events: none;
+  font-weight: 800;
+  font-size: 15px;
+  color: var(--color-primary-dark);
+  text-shadow: 0 1px 0 #fff;
+  transform: translate(-50%, 0);
+  animation: float-exp-up 1.2s ease-out forwards;
+}
+
+@keyframes float-exp-up {
+  from { opacity: 1; transform: translate(-50%, 0); }
+  to { opacity: 0; transform: translate(-50%, -48px); }
+}
