@@ -1,0 +1,134 @@
+/*
+ * 파일: public/css/pages/notifications.css
+ * 역할: 알림함 화면 스타일 — 목록 행, 안 읽음 표시, 브라우저 알림 카드
+ * 담당: P4
+ */
+
+.notifications-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* ===== 헤더: 제목 + [모두 읽음] ===== */
+.noti-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.noti-header-title {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+/* ===== 브라우저 알림 카드 ===== */
+.browser-card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.browser-card-icon {
+  font-size: 24px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.browser-card-text {
+  font-size: 13px;
+  color: var(--color-muted);
+  flex: 1;
+}
+
+/* ===== 알림 목록 ===== */
+.noti-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.noti-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 64px;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  transition: background-color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.noti-row:active {
+  background: var(--color-primary-soft);
+}
+
+.noti-row:focus-visible {
+  outline: 3px solid rgba(91, 166, 114, 0.4);
+  outline-offset: 2px;
+}
+
+/* 안 읽은 알림: 연한 초록 배경 + 오른쪽 dot */
+.noti-row.is-unread {
+  background: var(--color-primary-soft);
+  border-color: var(--color-primary);
+  position: relative;
+}
+
+.noti-row.is-unread::after {
+  content: '';
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-accent);
+}
+
+/* 40px 아이콘 원 */
+.noti-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.noti-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.noti-title {
+  font-size: 15px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.noti-text {
+  font-size: 13px;
+  color: var(--color-muted);
+  overflow-wrap: anywhere;
+}
+
+.noti-time {
+  font-size: 12px;
+  color: var(--color-muted);
+  margin-top: 2px;
+}
