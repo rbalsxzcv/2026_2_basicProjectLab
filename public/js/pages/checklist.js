@@ -285,13 +285,15 @@ export default {
         if (!item) return;
         await handleComplete(item, el);
       }),
-      // 칩 클릭 → 해당 식물의 체크리스트로 전환
+      // 칩 클릭 → 해당 식물로 전환 (plant 변수만 교체, offs 재정의 방지)
       on(container, 'click', '[data-select-plant]', (event, el) => {
         const next = (store.get('plants') ?? []).find((p) => p.id === el.dataset.selectPlant);
         if (!next || next.id === plant.id) return;
         selectPlant(next.id);
         plant = next;
-        init();
+        // init()을 다시 부르면 offs가 재정의되지 않아 이벤트가 누적됨
+        // 대신 plant만 교체하고 draw()로 화면만 갱신
+        refresh();
       }),
       on(container, 'click', '[data-photo]', async () => {
         if (busy) return;
@@ -314,11 +316,11 @@ export default {
       }),
     ];
 
+    let currentItems = [];
+
     function findItem(id) {
       return currentItems.find((i) => i.id === id) ?? null;
     }
-
-    let currentItems = [];
 
     // ───────── 진입: 오늘 체크리스트 생성 (없으면) ─────────
     async function init() {

@@ -13,6 +13,7 @@
 import { html, on } from '../utils/dom.js';
 import { toast, emptyState } from '../ui/components.js';
 import { listNotifications, markRead, markAllRead, requestBrowserPermission } from '../services/notifications.js';
+import { toDateStr } from '../utils/date.js';
 
 const ICONS = { CHECKLIST: '✅', MONTHLY_REPORT: '📄' };
 const MINUTE_MS = 60 * 1000;
@@ -27,7 +28,8 @@ function timeAgo(noti) {
   if (diff < MINUTE_MS) return '방금';
   if (diff < HOUR_MS) return `${Math.floor(diff / MINUTE_MS)}분 전`;
   if (diff < 24 * HOUR_MS) return `${Math.floor(diff / HOUR_MS)}시간 전`;
-  const dateStr = created.toDate().toISOString().slice(0, 10); // 화면 표시용(한국 시각 오차가 하루 미만이라 충분)
+  // toDateStr: 한국 시간(Asia/Seoul) 기준 YYYY-MM-DD — 자정 전후 오차 방지
+  const dateStr = toDateStr(created);
   const [, m, d] = dateStr.split('-');
   return `${Number(m)}월 ${Number(d)}일`;
 }
@@ -116,16 +118,17 @@ export default {
 
     // ───────── 이벤트 ─────────
     const offs = [
-      // 알림 탭 → 읽음 처리 → 링크로 이동
+      // 알림 탭 → 읽음 처리 → 링크로 이동 (실패 시 이동하지 않음)
       on(container, 'click', '[data-open]', async (event, el) => {
         const link = el.dataset.link;
         if (!link) return;
         try {
           await markRead(el.dataset.open);
+          location.hash = link; // 성공 시에만 이동
         } catch (error) {
           console.warn('[notifications] 읽음 처리 실패', error);
+          toast('목록을 갱신하지 못했어요. 다시 시도해 주세요.', 'error');
         }
-        location.hash = link;
       }),
 
       // 모두 읽음
@@ -134,7 +137,7 @@ export default {
         busy = true;
         try {
           await markAllRead();
-          await load(); // 읽음 상태로 다시 그림
+          await load(); // 읽음 상태로 전체 목록 + 카드 다시 그리기
         } catch (error) {
           console.warn('[notifications] 모두 읽음 실패', error);
           toast('처리를 하지 못했어요. 다시 시도해 주세요.', 'error');
@@ -148,20 +151,9 @@ export default {
         const result = await requestBrowserPermission();
         if (result === 'granted') toast('브라우저 알림을 켰어요', 'success');
         else if (result === 'denied') toast('브라우저 설정에서 알림을 허용해 주세요');
-        if (alive) refreshBrowserCard();
+        if (alive) load(); // 권한 결과로 카드가 바뀌므로 전체 다시 그리기
       }),
     ];
-
-    // 권한 결과만 반영해서 카드 부분만 다시 그림 (목록은 그대로)
-    function refreshBrowserCard() {
-      const card = container.querySelector('.browser-card');
-      if (!card) return;
-      const temp = document.createElement('div');
-      temp.innerHTML = browserCard();
-      const next = temp.firstElementChild;
-      if (next) card.replaceWith(next);
-      else card.remove();
-    }
 
     // ───────── 로드 ─────────
     async function load() {
@@ -174,7 +166,12 @@ export default {
         if (alive) {
           container.innerHTML = html`
             <section class="notifications-page">
-              ${emptyState({ icon: '🔔', message: '알림을 불러오지 못했어요.' })}
+              ${emptyState({
+                icon: '🔔',
+                message: '알림을 불러오지 못했어요.',
+                actionLabel: '다시 시도',
+                actionHref: '#/notifications',
+              })}
             </section>
           `;
           toast('알림을 불러오지 못했어요. 다시 시도해 주세요.', 'error');

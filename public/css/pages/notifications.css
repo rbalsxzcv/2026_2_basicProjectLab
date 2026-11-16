@@ -132,3 +132,11 @@
   color: var(--color-muted);
   margin-top: 2px;
 }
+
+/* ───────── 감소된 Motion ───────── */
+@media (prefers-reduced-motion: reduce) {
+  .noti-row,
+  .browser-card {
+    transition: none !important;
+  }
+}
