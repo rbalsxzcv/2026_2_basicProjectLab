@@ -134,23 +134,25 @@ export async function notifyChecklistCreated(plant, checklist) {
 }
 
 // 시작 작업(startup.js)이 부름: 지난달 리포트를 새로 만들었을 때
+// plantId: 문자열(식물 id) 또는 식물 변수(호환용) — 둘 다 수용
 export async function notifyReportCreated({ plantId, month }) {
-  const plant = (store.get('plants') ?? []).find((p) => p.id === plantId);
+  const id = typeof plantId === 'string' ? plantId : (plantId?.id ?? '');
+  const plant = (store.get('plants') ?? []).find((p) => p.id === id);
   const name = plant?.name ?? '내 식물';
   const monthNum = Number(month?.slice(5)) || 0;
   const body = '함께한 달의 기록을 정리했어요. 쉴 때 편하게 읽어 보세요.';
   const created = await createNotification({
-    key: `REPORT_${month}_${plantId}`,
+    key: `REPORT_${month}_${id}`,
     type: 'MONTHLY_REPORT',
     title: `${name}의 ${monthNum}월 이야기가 도착했어요`,
     body,
-    link: `#/report/${month}?plant=${plantId}`,
+    link: `#/report/${month}?plant=${id}`,
   });
   if (created) {
     showBrowserNotification({
       title: `${name}의 ${monthNum}월 이야기가 도착했어요`,
       body,
-      link: `#/report/${month}?plant=${plantId}`,
+      link: `#/report/${month}?plant=${id}`,
     });
   }
 }

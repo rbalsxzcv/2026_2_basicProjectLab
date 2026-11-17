@@ -12,14 +12,14 @@
  */
 
 import { html, on } from '../utils/dom.js';
-import { toast, choiceModal, confirmModal, showLoading, hideLoading, emptyState } from '../ui/components.js';
+import { toast, choiceModal, confirmModal, emptyState } from '../ui/components.js';
 import { store } from '../core/store.js';
 import { getCurrentPlant, selectPlant, DEFAULT_CHARACTER } from '../services/plants.js';
 import { ensureTodayChecklist, getChecklist, summarize, completeItem, TASK_INFO } from '../services/checklists.js';
 import { getSpecies } from '../services/species.js';
 import { celebrateIfLeveledUp, floatExp } from '../ui/celebrate.js';
 import { runDiagnosisFlow } from '../ui/diagnosis-flow.js';
-import { today, formatKorean, diffDays } from '../utils/date.js';
+import { today, addDays, formatKorean, diffDays } from '../utils/date.js';
 
 export default {
   title: '오늘의 체크리스트',
@@ -65,7 +65,8 @@ export default {
       const allDone = s.total > 0 && s.remaining === 0;
       const items = checklist?.items ?? [];
       const daily = items.filter((i) => i.category === 'DAILY_MICRO');
-      const periodic = items.filter((i) => i.category === 'PERIODIC_CARE');
+      // 미룬 물주기는 아래 "미룸" 카드에서만 보여요 (여기서도 나오면 두 번그려짐)
+      const periodic = items.filter((i) => i.category === 'PERIODIC_CARE' && !i.postponed);
       const postponed = items.filter((i) => i.postponed);
       const generatedBy = checklist?.generatedBy;
       const isAi = generatedBy === 'AI';
@@ -131,7 +132,7 @@ export default {
             </div>
           </div>
 
-          <!-- 미룸 (흙이 촉축해서 미룬 물주기) -->
+          <!-- 미룸 (흙이 촉촉해서 미룬 물주기) -->
           ${postponed.length
             ? html`
                 <div class="stack">
@@ -177,7 +178,7 @@ export default {
           <div class="item-body">
             <p class="item-title">${item.title}</p>
             ${isPostponed
-              ? html`<p class="item-postponed">흙이 촉촉해서 이틀 뒤에 다시 알려 드릴게요 🌱</p>`
+              ? html`<p class="item-postponed">${formatKorean(addDays(today(), 2))}로 미뤘어요. 흙이 아직 촉촉하네요 🌱</p>`
               : isWater && !isDone
                 ? html`<p class="item-tip">${info.tip}</p>`
                 : ''}
@@ -196,6 +197,13 @@ export default {
     async function handleComplete(item, btn) {
       if (busy) return;
 
+      // 자정 넘김: 버튼을 눌렀을 때 날짜가 바뀌어 있으면 새로고침 (지침 §5)
+      if (today() !== screenDate) {
+        toast('날짜가 바뀌었어요', 'info');
+        location.reload();
+        return;
+      }
+
       // 물주기: Safe-Lock 팝업 (배경·ESC 로 닫히지 않음)
       if (item.taskType === 'WATER') {
         const answer = await choiceModal({
@@ -211,7 +219,7 @@ export default {
             soilMoistureDry: answer === '말라 있어요',
           });
           if (result.status === 'postponed') {
-            toast('흙이 아직 촉축하네요. 이틀 뒤에 다시 알려 드릴게요 🌱');
+            toast('흙이 아직 촉촉하네요. 이틀 뒤에 다시 알려 드릴게요 🌱');
           } else if (result.status === 'completed') {
             afterComplete(btn, item, result);
           }

@@ -103,6 +103,11 @@
 - 남은 문제 / 알릴 것:
   - P1 이 머지되기 전까지 [사진으로 확인] 은 사진 기록만 (지침 §1-4 의 정상 동작)
   - 프롬프트·mock (`checklist.v1.txt` · `mocks/checklist.json`) 은 C2 값 유지 — 문구 수정 필요 시 이 브랜치에서 반영
+  - **[P6 교차 계약 — P6 담당자 필수 확인]** `services/checklists.js` 의 체크리스트 항목은 `00_MAIN.md` §5.5 형태 그대로입니다.
+    - `completedAt` = 실제 완료 날짜(UTC 기준 `YYYY-MM-DD`). P6의 `waterOnTimeRate` 계산(`completedAt ≤ dueDate + 1 day`)이 가능합니다.
+    - `postponed` 항목은 **절대 `isCompleted`와 동시에 true가 될 수 없습니다**(완료 로직이 미루기 분기를 먼저 return). P6의 분모에서 미루기 제외 규칙과 모순 없습니다.
+    - `summarize()`는 미루기 항목을 `{total, done, remaining, percent}` 에서 제외합니다. 메인 카드와 P6의 `routineRate` 둘 다 동일 기준으로 동작합니다.
+    - 미루기 후 다음 날 `schedules/WATER.dueDate` = 오늘+2 (postponeSchedule). P6는 `schedules` 에서도 정기 관리 날짜를 읽을 수 있습니다.
 
 ## [P4] 알림함 · 브라우저 알림 (2026-11-15, 담당: C)
 - 만든 파일: `public/js/pages/notifications.js`, `public/css/pages/notifications.css`
@@ -117,3 +122,8 @@
 - 남은 문제 / 알릴 것:
   - 선택 항목 FCM(앱 닫은 뒤 디바이스 푸시)은 **팀 결정 전까지 제외** (P4 §7 — 서버 필요, 00_MAIN §3 "백엔드 없음" 원칙 충돌)
   - 리포트 알림의 본문은 P6 머지 전에도 정상 동작 (P6 는 리포트 문서 생성 쪽만 담당)
+  - **[P6 교차 계약 — P6 담당자 필수 확인]**
+    - `notifyReportCreated({ plantId, month })` 의 `plantId` 는 **문자열(식물 id)** 로 기대합니다. `startup.js:66` 에서 `ensureLastMonthReports` 가 반환한 `r` (=`{ plantId, month, created }`) 을 그대로 넘기므로 정상입니다.
+    - **지침 오타 주의:** `prompt/pages/P4_notifications.md` §4 예제는 `notifyReportCreated({ plantId: current, ... })` 로 **식물 변수**를 적고 있습니다. 이는 지침 오타이며, 실제 서명은 `plantId` (문자열) 입니다. P6 등이 지침을 그대로 베끼면 식물 이름이 `'내 식물'` 로 고정됩니다.
+    - 본 코드는 `plantId` 가 문자열이든 식물 변수든 모두 수용합니다 (`typeof plantId === 'string' ? plantId : plantId?.id ?? ''`).
+    - P6 의 `computeMonthlyStats` 가 체크리스트를 읽는 경우: `completedAt` = 실제 완료 날짜, `postponed` 는 절대 `isCompleted` 와 공존하지 않음 (P3 노트의 교차 계약과 동일).
