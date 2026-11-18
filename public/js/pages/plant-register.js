@@ -1,25 +1,48 @@
 /**
  * 파일: public/js/pages/plant-register.js
  * 역할: 식물 등록 (#/plants/new) / 식물 정보 수정 (#/plants/:id/edit)
- *       종류 선택 → 별명 → 구입일 → (수명) → 사진 → AI 캐릭터 만들기 → 등록
+ *       종류 선택(목록에 없으면 AI로 새 종류 추가) → 별명 → 구입일 → (수명) → 사진 → AI 캐릭터 만들기 → 등록
  * 사용하는 파일: services/species.js, services/plants.js, services/images.js, core/ai.js,
  *               utils/image.js, utils/date.js, utils/dom.js, ui/components.js
  * 담당: C4
  */
 
 import { html, on } from '../utils/dom.js';
-import { toast, openModal, showLoading, hideLoading } from '../ui/components.js';
+import { toast, openModal, confirmModal, showLoading, hideLoading } from '../ui/components.js';
 import { store } from '../core/store.js';
 import { navigate } from '../core/router.js';
 import { setTitle } from '../ui/layout.js';
-import { generateCharacter } from '../core/ai.js';
-import { searchSpecies, getSpecies } from '../services/species.js';
+import { generateCharacter, AiError } from '../core/ai.js';
+import { searchSpecies, getSpecies, previewSpeciesByName, saveSpeciesDraft } from '../services/species.js';
 import { createPlant, updatePlant, getPlant, DEFAULT_CHARACTER } from '../services/plants.js';
 import { prepareImageForSave } from '../services/images.js';
 import { fileToDataUrl } from '../utils/image.js';
 import { today, addDays } from '../utils/date.js';
 
 const LIFESPAN_TYPES_WITH_END = ['ANNUAL', 'BIENNIAL', 'HARVEST'];
+const LIFESPAN_LABELS = { PERENNIAL: '여러해살이', ANNUAL: '한해살이', BIENNIAL: '두해살이', HARVEST: '수확하고 마무리' };
+const AI_ADD_MIN_LENGTH = 2; // 이 글자 수 이상 입력하고, 검색 결과가 없을 때만 [AI로 추가] 버튼을 보여 줌
+
+// AI가 만든 새 식물 초안을 사용자에게 보여 주는 확인 창 내용
+function speciesDraftSummary(species, typed) {
+  const lifespanDays = species.defaultLifespanDays ? ` (약 ${species.defaultLifespanDays}일)` : '';
+  return html`
+    <div class="stack">
+      <p>'${typed}'을(를) <strong>${species.name}</strong>(으)로 알아들었어요. 아래 정보가 맞으면 추가해 주세요.</p>
+      ${species.aliases?.length ? html`<p class="muted">다른 이름: ${species.aliases.join(', ')}</p>` : ''}
+      <p>${species.careTip}</p>
+      <ul class="species-draft">
+        <li>💧 물주기: 약 ${species.waterIntervalDays}일마다 (흙이 말랐을 때만)</li>
+        <li>☀️ 밝기: ${species.luxMin}~${species.luxMax} lux</li>
+        <li>🌡️ 온도: ${species.tempMin}~${species.tempMax}℃ · 💦 습도: ${species.humidityMin}~${species.humidityMax}%</li>
+        <li>🌱 생활 주기: ${LIFESPAN_LABELS[species.lifespanType] ?? LIFESPAN_LABELS.PERENNIAL}${lifespanDays}</li>
+      </ul>
+      ${species.source === 'MOCK'
+        ? html`<p class="muted">🧪 지금은 테스트(mock) 모드라 AI가 실제로 확인하지 않았어요. 식물이 아닌 이름도 그대로 만들어져요.</p>`
+        : html`<p class="muted">🤖 AI가 만든 참고용 정보예요. 다른 식물로 알아들었다면 [다시 입력할게요]를 눌러 주세요.</p>`}
+    </div>
+  `;
+}
 
 function needsLifespan(species) {
   return LIFESPAN_TYPES_WITH_END.includes(species?.lifespanType);
@@ -31,6 +54,8 @@ function speciesSummary(species) {
       <p class="card-title">🌿 ${species.name}</p>
       <p class="card-sub">${species.careTip}</p>
       <p class="species-meta">💧 물주기 권장 간격: 약 ${species.waterIntervalDays}일</p>
+      ${species.source === 'AI' ? html`<p class="muted">🤖 AI가 만들어 준 참고용 정보예요.</p>` : ''}
+      ${species.source === 'MOCK' ? html`<p class="muted">🧪 테스트(mock) 모드에서 만든 임시 정보예요.</p>` : ''}
     </div>
   `;
 }
@@ -97,7 +122,8 @@ export default {
                   <input class="input" type="search" data-species-search placeholder="예) 몬스테라, 스투키" aria-label="식물 종류 검색" />
                   <div data-species-selected></div>
                   <ul class="species-list" data-species-list></ul>
-                  <p class="muted">목록에 없나요? 비슷한 종류를 골라 주세요</p>
+                  <div data-species-ai></div>
+                  <p class="muted">목록에 없나요? 이름을 입력하면 AI가 새 식물 정보를 만들어 드려요</p>
                 `}
           </div>
 
@@ -183,6 +209,79 @@ export default {
     const searchInput = form.querySelector('[data-species-search]');
     const listEl = form.querySelector('[data-species-list]');
     const selectedEl = form.querySelector('[data-species-selected]');
+    const aiAddEl = form.querySelector('[data-species-ai]');
+
+    // 검색 결과가 하나도 없을 때만 [AI로 새 식물 추가하기] 버튼을 보여 줌 (검색 중 실수로 누르는 것 방지)
+    function drawAiAddButton(keyword, list) {
+      const typed = String(keyword ?? '').trim();
+      if (!alive || searchInput.value.trim() !== typed) return; // 그사이 검색어가 바뀌었으면 옛 결과는 무시
+      const show = typed.length >= AI_ADD_MIN_LENGTH && list.length === 0;
+      aiAddEl.innerHTML = show
+        ? html`<button type="button" class="btn btn-secondary btn-block" data-species-ai-add>
+            🤖 '${typed}' AI로 새 식물 추가하기
+          </button>`
+        : '';
+    }
+
+    // [AI로 새 식물 추가하기] → ① AI가 초안 생성 → ② 사용자 확인 → ③ 확인한 것만 저장 → 바로 선택
+    async function addSpeciesWithAi() {
+      const typed = searchInput.value.trim();
+      if (busy || !typed) return;
+      busy = true;
+      try {
+        // ① AI 초안 (아직 저장 안 함)
+        showLoading('AI가 식물 정보를 찾아보는 중이에요…');
+        let preview;
+        try {
+          preview = await previewSpeciesByName(typed);
+        } finally {
+          hideLoading();
+        }
+        if (!alive) return; // 그사이 다른 화면으로 이동 → 저장하지 않고 끝
+
+        // ② 사용자 확인 (닫거나 [다시 입력할게요] → 아무것도 저장하지 않음)
+        let ok;
+        if (preview.isNew) {
+          const answer = await openModal({
+            title: '🌿 이 식물이 맞나요?',
+            body: speciesDraftSummary(preview.species, typed),
+            actions: [
+              { label: '이 정보로 추가하기', value: true, variant: 'primary' },
+              { label: '다시 입력할게요', value: false, variant: 'ghost' },
+            ],
+          });
+          ok = answer === true;
+        } else {
+          ok = await confirmModal(`'${typed}'은(는) 목록에 있는 '${preview.species.name}'와(과) 같은 식물로 보여요.`, {
+            title: '🌿 이 식물이 맞나요?',
+            okLabel: `'${preview.species.name}'(으)로 고르기`,
+            cancelLabel: '다시 입력할게요',
+          });
+        }
+        if (!alive || !ok) return;
+
+        // ③ 저장 (새 식물일 때만)
+        let species = preview.species;
+        if (preview.isNew) {
+          showLoading('식물 정보를 저장하는 중이에요…');
+          try {
+            species = await saveSpeciesDraft(preview.species);
+          } finally {
+            hideLoading();
+          }
+          if (!alive) return;
+        }
+
+        searchInput.value = species.name;
+        await chooseSpecies(species.id);
+        toast(preview.isNew ? `'${species.name}'을(를) 식물 목록에 추가했어요` : `'${species.name}'을(를) 골랐어요`, 'success');
+      } catch (error) {
+        console.warn('[plant-register] AI 식물 추가 실패', error?.message);
+        if (alive) toast(error instanceof AiError ? error.message : '새 식물을 추가하지 못했어요. 잠시 후 다시 시도해 주세요.', 'error');
+      } finally {
+        busy = false;
+      }
+    }
 
     async function drawSpeciesList(keyword = '') {
       let list = [];
@@ -190,10 +289,14 @@ export default {
         list = await searchSpecies(keyword);
       } catch (error) {
         console.warn('[plant-register] 식물 목록 불러오기 실패', error);
-        if (alive) listEl.innerHTML = html`<li class="muted">식물 목록을 불러오지 못했어요. 새로고침해 주세요.</li>`;
+        if (alive) {
+          listEl.innerHTML = html`<li class="muted">식물 목록을 불러오지 못했어요. 새로고침해 주세요.</li>`;
+          aiAddEl.innerHTML = '';
+        }
         return;
       }
       if (!alive) return;
+      drawAiAddButton(keyword, list);
       listEl.innerHTML = list.length
         ? html`${list.map(
             (s) => html`
@@ -225,6 +328,7 @@ export default {
     if (!isEdit) {
       searchInput.addEventListener('input', () => drawSpeciesList(searchInput.value));
       offs.push(on(listEl, 'click', '[data-species-id]', (event, el) => chooseSpecies(el.dataset.speciesId)));
+      offs.push(on(aiAddEl, 'click', '[data-species-ai-add]', () => addSpeciesWithAi()));
       drawSpeciesList();
     } else {
       updateLifespanField();

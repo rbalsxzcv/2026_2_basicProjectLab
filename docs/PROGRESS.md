@@ -87,3 +87,54 @@
   - **공통 통합 확인(가입 → 식물 등록 → 메인 → 로그아웃 → 다시 로그인)은 Firebase 프로젝트를 연결한 뒤 해야 함.**
     통과하면 아래 줄을 "공통 완료·동결, P1~P6 시작 가능" 으로 바꾸세요.
   - 상태: 공통 코드 작성 완료 — Firebase 연결 후 통합 확인 대기
+
+## [추가] AI 식물 종류 추가 (2026-11-18, 담당: A)
+- 만든 파일: `public/prompts/species.v1.txt`, `public/mocks/species.json`
+- 수정한 파일 (기존 함수·변수 이름과 반환 모양은 그대로, 추가만 함):
+  - `public/js/core/ai.js` — `generateSpecies({ speciesName })` 추가 (Firebase AI Logic, text 모델)
+  - `public/js/ai/normalize.js` — `RULES.species` · `checkShape('species')` 추가 (숫자 범위·lifespanType 다듬기)
+  - `public/js/services/species.js` — `findSpeciesByName`, `addSpeciesByName` 추가.
+    AI로 만든 종류는 `users/{uid}/customSpecies/ai-xxxx` 에 저장되고 `loadSpecies`/`getSpecies`/`searchSpecies` 결과에 함께 나옴
+  - `public/js/pages/plant-register.js` — 검색어와 정확히 같은 종류가 없으면 [🤖 'OO' AI로 새 식물 추가하기] 버튼 표시
+  - `00_MAIN.md` §5.4·§5.5, `public/prompts/README.md` — 새 함수·컬렉션·템플릿 기록
+- 동작 확인 방법: `#/plants/new` → 검색칸에 목록에 없는 이름(예: 아레카야자) 입력 → [AI로 새 식물 추가하기] →
+  선택 카드에 "AI가 만들어 준 참고용 정보예요" 표시 → 등록 → Firestore `customSpecies` 1개, `plants.speciesId = 'ai-…'`, `schedules` 4개.
+  mock 모드에서는 입력한 이름 + 기본 생육값으로 만들어짐
+- 남은 문제 / 알릴 것:
+  - 다른 화면은 지금처럼 `getSpecies(plant.speciesId)` 만 쓰면 AI 종류도 그대로 동작 (추가 작업 없음)
+  - AI 생육값은 참고용 대략값. 이미 같은 이름(별칭 포함)이 있으면 AI를 부르지 않고 기존 종류를 씀
+  - `firestore.rules` 변경 불필요 (`users/{uid}/**` 규칙에 포함)
+
+## [추가] AI 식물 종류 추가 — 안전장치 보강 (2026-11-18, 담당: A)
+- 수정한 파일 (이번에 새로 추가한 기능 범위 안에서만 수정, 기존 공통 함수·변수·반환 모양은 그대로):
+  - `public/js/ai/normalize.js` (`RULES.species`) — `isPlant === true` 일 때만 통과(빠지면 거절), `rejectReason` 추가,
+    입력 글자 제한(한글·영문·숫자·띄어쓰기·- · ( ), 2~30자), 재배 제한 식물(대마·양귀비 등) 입력·출력 모두 차단,
+    이름·별칭·careTip 금지어(죽음·시듦·실패·경고 등) 검사, 물주기 최소 3일(여러해살이)/2일(그 외)
+  - `public/prompts/species.v1.txt` — 판정 기준(NOT_PLANT / NOT_GROWABLE / RESTRICTED), 입력 속 지시 무시, 애매하면 보수적으로
+  - `public/js/services/species.js` — `previewSpeciesByName`(AI 초안, 저장 안 함) · `saveSpeciesDraft`(확인 후 저장) 추가,
+    `addSpeciesByName` 은 같은 이름·같은 인자로 유지(두 함수를 이어서 부름). 문서 id = 'ai-' + 대표 이름 → 중복 저장 방지
+  - `public/js/pages/plant-register.js` — 저장 전 확인 창, 검색 결과가 없고 2글자 이상일 때만 AI 버튼 표시
+  - `public/css/pages/plant.css` — 확인 창 목록 스타일(`.species-draft`)
+  - `public/mocks/species.json`, `00_MAIN.md` §5.4·§5.5 — `rejectReason`, 새 함수 기록
+- 동작 확인 방법: `#/plants/new` → ① "몬" 입력 → 버튼 안 보임 ② 목록에 없는 이름 → 버튼 → 확인 창 → [다시 입력할게요] → Firestore 에 저장 안 됨
+  ③ 다시 → [이 정보로 추가하기] → `customSpecies/ai-<이름>` 저장 ④ "대마" → AI 호출 없이 안내 ⑤ "몬스테라{}" → 글자 안내
+- 남은 문제 / 알릴 것 (코드만으로 못 막음 → 팀 결정):
+  - mock 모드는 항상 "식물"로 판정하고 기본값으로 만듦 → 배포 시 real 모드 확인 필요. mock 으로 만든 테스트 데이터는 콘솔에서 지우기
+  - AI 생육값의 정확성 자체는 검증 불가 (참고용 표시 + 사용자 확인으로 완화). 다른 화면의 "AI 정보" 표시, 종류 수정·삭제 화면은 미구현
+  - 브라우저에서 도는 검사이므로 의도적 변조는 못 막음 (사용자별 저장이라 피해는 본인 계정 한정)
+  - 예전에 만든 종류(id 가 'ai-<무작위>')도 그대로 동작함
+
+## [버그] "쓰레기통"이 식물로 등록됨 (2026-11-18, 담당: A)
+- 원인: `core/ai-config.js` 의 `AI_MODELS.text` 가 비어 있어 #/dev 에서 real 로 바꿔도 `provider.js` 가 mock 으로 동작.
+  mock 응답(`mocks/species.json`)은 항상 isPlant: true → 무엇을 넣어도 통과. (코드 필터로는 "식물인지"를 판단할 수 없음)
+- 수정: `mocks/species.json` 에 `"_mock": true` → normalize 가 `isMock` 으로 전달 → mock 으로 만든 종류는 `source: 'MOCK'` 으로 저장,
+  확인 창·선택 카드에 "테스트(mock) 모드라 AI가 실제로 확인하지 않았어요" 표시
+- 실제 판정을 쓰려면: `AI_MODELS.text` 에 공식 문서(https://firebase.google.com/docs/ai-logic/models)의 모델 이름을 넣고 #/dev 에서 real 로 전환 (팀 결정)
+- 정리할 것: 테스트로 만든 `users/{uid}/customSpecies` 문서(예: ai-쓰레기통)와 그 종류로 등록한 식물은 콘솔/내 식물 관리에서 삭제
+
+## [설정] 실제 AI(real) 모드 준비 (2026-11-18, 담당: A)
+- 수정한 파일: `public/js/core/ai-config.js` (`AI_MODELS.text = 'gemini-3.8-flash'`, `AI_MODE` 는 'mock' 유지),
+  `public/js/core/firebase-config.js` (`appCheckSiteKey` — reCAPTCHA v3 공개 사이트 키), `README.md` (실행·real 모드·테스트 안내)
+- Firebase 콘솔: AI Logic(Gemini Developer API) 시작, App Check(reCAPTCHA v3) 등록
+- 동작 확인 방법: README "실제 AI(real) 모드 켜기" 순서대로 디버그 토큰 등록 → #/dev 에서 real → advise 버튼 → 사용량 증가 확인
+- 남은 문제 / 알릴 것: 팀원은 각자 디버그 토큰 등록 필요. Firestore App Check 적용(Enforce)은 아직 끔

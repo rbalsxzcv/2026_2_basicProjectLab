@@ -18,6 +18,7 @@ AI에게 보내는 글(프롬프트)은 코드에 직접 쓰지 않고 이 폴�
 | `environment` | `analyzeEnvironment` | speciesName, profile, measuredLux, weather, homeType, windowDir, heaterOrAcExposed |
 | `checklist` | `suggestChecklist` | speciesName, profile, weather, latestEnvironment, dueSchedules, recentHistory |
 | `monthly-report` | `writeMonthlyReport` | speciesName, daysSincePurchase, lifespan, stats, monthlyHistory, previousReport |
+| `species` | `generateSpecies` | speciesName (사용자가 입력한 식물 이름) |
 
 ## 개선하는 순서
 
@@ -31,6 +32,7 @@ AI에게 보내는 글(프롬프트)은 코드에 직접 쓰지 않고 이 폴�
 | 날짜 | 템플릿 | 버전 | 바꾼 점 | 좋았던 출력 예시(요약) | 채택 여부 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | 2026-11-12 | 전체 | v1 | 최초 작성 (C2) | — | 채택 |
+| 2026-11-18 | species | v1 | 최초 작성 (AI 식물 종류 추가) | — | 채택 |
 
 ## 담당 (공통 동결 후 문구 수정 권한)
 
@@ -40,6 +42,7 @@ AI에게 보내는 글(프롬프트)은 코드에 직접 쓰지 않고 이 폴�
 | `checklist` | P3 (C) |
 | `environment`, `monthly-report` | P5 / P6 (D) |
 | `character` | A |
+| `species` | A |
 | 개선 절차 · 실험실 | P2 (B) |
 
 ## 꼭 지킬 것

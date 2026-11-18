@@ -43,7 +43,7 @@ export const firebaseConfig = {
 // 3) 만들어진 "사이트 키"(공개용, 6L... 로 시작)를 아래 따옴표 안에 넣습니다.
 //    ※ "비밀 키"는 Firebase 콘솔의 App Check 설정에만 넣고, 절대 코드에 넣지 마세요.
 // 4) localhost 테스트용 디버그 토큰 등록은 core/firebase.js 맨 위 주석을 보세요.
-export const appCheckSiteKey = '';
+export const appCheckSiteKey = '6LcaNSYuAAAAAABCTeoYNz6aBpbqovqrmFMOodCX';
 
 // apiKey가 아직 'YOUR_'로 시작하면 설정이 안 된 것으로 봅니다.
 export const isFirebaseConfigured = !firebaseConfig.apiKey.startsWith('YOUR_');
