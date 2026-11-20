@@ -1,6 +1,6 @@
 /**
  * 파일: public/js/core/ai.js
- * 역할: ★ 앱이 부르는 AI 함수 6개 (00_MAIN §5.4) + AiError
+ * 역할: ★ 앱이 부르는 AI 함수 6개 (00_MAIN §5.4) + 새 식물 종류 만들기(generateSpecies) + AiError
  * 사용하는 파일: ai/normalize.js, ai/prompts.js, ai/provider.js, ai/json.js
  * 담당: C2
  *
@@ -132,4 +132,18 @@ export function suggestChecklist(input = {}) {
 // 월간 리포트 글 { praise, suggestions[1–2], repotNotice, lifespanNotice }
 export function writeMonthlyReport(input = {}) {
   return aiCall('monthly-report', input, { kind: 'text' });
+}
+
+// 사용자가 입력한 식물 이름 → 새 식물 종류의 생육 정보
+// { isPlant, rejectReason, name, aliases[], luxMin, luxMax, tempMin, tempMax, humidityMin, humidityMax,
+//   waterIntervalDays, fertilizeIntervalDays, wipeLeafIntervalDays, repotIntervalDays,
+//   lifespanType, defaultLifespanDays, careTip }  (plant-species.json 항목과 같은 모양 + isPlant, rejectReason)
+// rejectReason: null | 'NOT_PLANT' | 'NOT_GROWABLE' | 'RESTRICTED'  (isPlant 가 false 일 때 이유)
+// isMock: true 면 mock 응답 (AI 가 실제로 판단하지 않음 — 무엇을 넣어도 식물로 나옴)
+// ※ Firestore 저장은 services/species.js (previewSpeciesByName → saveSpeciesDraft) 가 합니다.
+export async function generateSpecies({ speciesName } = {}) {
+  const result = await aiCall('species', { speciesName }, { kind: 'text' });
+  // AI(또는 mock)가 이름을 비워 두면 사용자가 입력한 이름을 그대로 씀
+  if (!result.name) result.name = String(speciesName).trim();
+  return result;
 }

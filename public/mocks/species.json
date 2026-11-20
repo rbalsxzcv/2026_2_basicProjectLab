@@ -1,0 +1,20 @@
+{
+  "_mock": true,
+  "isPlant": true,
+  "rejectReason": null,
+  "name": "",
+  "aliases": [],
+  "luxMin": 1000,
+  "luxMax": 10000,
+  "tempMin": 18,
+  "tempMax": 27,
+  "humidityMin": 40,
+  "humidityMax": 70,
+  "waterIntervalDays": 7,
+  "fertilizeIntervalDays": 30,
+  "wipeLeafIntervalDays": 14,
+  "repotIntervalDays": 365,
+  "lifespanType": "PERENNIAL",
+  "defaultLifespanDays": null,
+  "careTip": "겉흙이 마르면 듬뿍 주고, 밝은 간접광이 드는 자리에 두세요."
+}
