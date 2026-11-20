@@ -77,6 +77,17 @@
   color: var(--color-primary-dark);
 }
 
+/* AI 새 식물 확인 창의 생육 정보 목록 */
+.species-draft {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 4px;
+  font-size: 14px;
+  color: var(--color-primary-dark);
+}
+
 /* 사진 미리보기 (둥근 정사각형) */
 .photo-pick {
   display: flex;

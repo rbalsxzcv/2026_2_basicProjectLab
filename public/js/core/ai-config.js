@@ -24,7 +24,7 @@
 export const AI_MODE = 'mock'; // 'mock' = 가짜 응답 / 'real' = Firebase AI Logic
 export const WEATHER_MODE = 'mock'; // 'mock' = 가짜 날씨 / 'real' = Open-Meteo
 export const PROMPT_VERSION = 'v1'; // public/prompts/*.v1.txt
-export const AI_MODELS = { text: '', vision: '', image: '' }; // 공식 문서의 모델 이름
+export const AI_MODELS = { text: 'gemini-3.8-flash', vision: '', image: '' }; // 공식 문서의 모델 이름
 export const AI_FALLBACK_TO_MOCK = false; // true면 실제 호출 실패 시 mock으로 대체 (시연용 안전장치)
 export const AI_DAILY_LIMITS = { text: 200, vision: 100, image: 20 };
 export const AI_TIMEOUT_MS = 45000;

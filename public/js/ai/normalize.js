@@ -188,7 +188,144 @@ const monthlyReport = {
   },
 };
 
-export const RULES = { character, diagnose, advice, environment, checklist, 'monthly-report': monthlyReport };
+// ───────── 새 식물 종류 만들기 (사용자가 입력한 이름 → plant-species.json 과 같은 모양) ─────────
+export const SPECIES_NAME_MAX = 30;
+export const LIFESPAN_TYPES = ['PERENNIAL', 'ANNUAL', 'BIENNIAL', 'HARVEST'];
+// 추가를 거절하는 이유: 식물이 아님 / 화분에서 기를 수 없음(조화·꽃다발 등) / 재배가 제한된 식물
+export const SPECIES_REJECT_REASONS = ['NOT_PLANT', 'NOT_GROWABLE', 'RESTRICTED'];
+
+// 식물 이름에 쓸 수 있는 글자: 한글, 영문, 숫자, 띄어쓰기, - · ( )
+// (따옴표·콜론·중괄호 등을 막아서 AI 에게 지시문을 끼워 넣기 어렵게 함)
+const SPECIES_NAME_PATTERN = /^[가-힣A-Za-z0-9 \-·()]+$/;
+
+// 국내에서 재배가 법으로 제한되는 식물 (AI 판단과 별개로 한 번 더 막음)
+const RESTRICTED_CONTAINS = [
+  '대마', '마리화나', '칸나비스', 'cannabis', 'marijuana', '아편', 'opium',
+  '페요테', 'peyote', '코카나무', '마약', '환각', '크라톰', 'kratom', '살비아디비노룸', 'salviadivinorum',
+];
+const RESTRICTED_EXACT = ['양귀비', '코카', 'coca', '헴프', 'hemp', 'papaversomniferum']; // '개양귀비'·'꽃양귀비'는 허용
+
+// 겁주거나 죄책감을 주는 표현 (00_MAIN §6 금지어) — AI 가 쓴 글에 있으면 기본 문구로 바꿈
+const FORBIDDEN_WORDS = ['죽음', '죽어', '죽는', '죽을', '죽었', '시듦', '시들', '실패', '경고', '벌점', '망가'];
+
+const compact = (text) => String(text ?? '').replace(/\s+/g, '').toLowerCase();
+
+// 재배가 제한된 식물 이름인지 (띄어쓰기·대소문자 무시)
+export function isRestrictedSpeciesName(text) {
+  const k = compact(text);
+  if (!k) return false;
+  return RESTRICTED_EXACT.includes(k) || RESTRICTED_CONTAINS.some((word) => k.includes(word));
+}
+
+function hasForbiddenWords(text) {
+  return FORBIDDEN_WORDS.some((word) => String(text ?? '').includes(word));
+}
+
+// 식물 이름으로 써도 되는 글자인지 (길이·글자 종류·금지어)
+function isSafeSpeciesName(text) {
+  return (
+    isText(text) &&
+    text.trim().length <= SPECIES_NAME_MAX &&
+    SPECIES_NAME_PATTERN.test(text.trim()) &&
+    !hasForbiddenWords(text)
+  );
+}
+
+// 숫자를 정수로 바꾸고 [min, max] 안으로 맞춤. 숫자가 아니면 fallback
+function clampInt(value, min, max, fallback) {
+  const n = Math.round(Number(value));
+  if (!Number.isFinite(n)) return fallback;
+  return Math.min(max, Math.max(min, n));
+}
+
+// 최솟값·최댓값을 다듬고, 거꾸로 들어오면 서로 바꿈
+function range(minValue, maxValue, limitMin, limitMax, fallbackMin, fallbackMax) {
+  let low = clampInt(minValue, limitMin, limitMax, fallbackMin);
+  let high = clampInt(maxValue, limitMin, limitMax, fallbackMax);
+  if (low > high) [low, high] = [high, low];
+  return [low, high];
+}
+
+const SPECIES_DEFAULTS = {
+  isPlant: false, // AI 가 판정을 빠뜨리면 "식물 아님"으로 봄 (애매하면 추가하지 않는 쪽이 안전)
+  rejectReason: null,
+  name: '',
+  aliases: [],
+  luxMin: 1000,
+  luxMax: 10000,
+  tempMin: 18,
+  tempMax: 27,
+  humidityMin: 40,
+  humidityMax: 70,
+  waterIntervalDays: 7,
+  fertilizeIntervalDays: 30,
+  wipeLeafIntervalDays: 14,
+  repotIntervalDays: 365,
+  lifespanType: 'PERENNIAL',
+  defaultLifespanDays: null,
+  careTip: '겉흙이 마르면 듬뿍 주고, 밝은 간접광이 드는 자리에 두세요.',
+};
+
+const species = {
+  validate(input) {
+    if (!isText(input?.speciesName)) return '식물 이름을 입력해 주세요.';
+    const name = input.speciesName.trim();
+    if (name.length < 2) return '식물 이름을 2글자 이상 입력해 주세요.';
+    if (name.length > SPECIES_NAME_MAX) return `식물 이름은 ${SPECIES_NAME_MAX}자 이내로 입력해 주세요.`;
+    if (!SPECIES_NAME_PATTERN.test(name)) return '식물 이름은 한글, 영문, 숫자로만 입력해 주세요.';
+    if (isRestrictedSpeciesName(name)) return '이 식물은 앱에서 키우기를 도와드리기 어려워요.';
+    return null;
+  },
+  buildVars: (input) => ({ speciesName: input.speciesName.trim().replace(/\s+/g, ' ') }),
+  defaults: SPECIES_DEFAULTS,
+  normalize(result) {
+    const d = SPECIES_DEFAULTS;
+    const [luxMin, luxMax] = range(result.luxMin, result.luxMax, 50, 100000, d.luxMin, d.luxMax);
+    const [tempMin, tempMax] = range(result.tempMin, result.tempMax, -10, 45, d.tempMin, d.tempMax);
+    const [humidityMin, humidityMax] = range(result.humidityMin, result.humidityMax, 10, 100, d.humidityMin, d.humidityMax);
+    const lifespanType = LIFESPAN_TYPES.includes(result.lifespanType) ? result.lifespanType : d.lifespanType;
+    // 여러해살이는 마무리 날짜가 없음. 나머지는 기본 수명이 꼭 있어야 등록 화면에서 날짜를 채울 수 있음
+    const defaultLifespanDays =
+      lifespanType === 'PERENNIAL' ? null : clampInt(result.defaultLifespanDays, 14, 730, 120);
+    // 과습 방지: 물주기 간격이 너무 짧지 않게 (여러해살이 3일, 채소·허브 등 2일이 최소 — 기본 목록의 최솟값 기준)
+    const waterMin = lifespanType === 'PERENNIAL' ? 3 : 2;
+
+    // 이름·별칭은 글자 종류·길이·금지어를 통과한 것만 씀 (이름이 비면 core/ai.js 가 입력한 이름으로 채움)
+    const name = isSafeSpeciesName(result.name) ? result.name.trim() : '';
+    const aliases = textList(result.aliases).filter(isSafeSpeciesName).slice(0, 5);
+
+    // 판정: isPlant 가 정확히 true 일 때만 통과. 거절 이유가 있거나 제한 식물 이름이면 거절
+    let isPlant = result.isPlant === true;
+    let rejectReason = SPECIES_REJECT_REASONS.includes(result.rejectReason) ? result.rejectReason : null;
+    if ([name, ...aliases].some(isRestrictedSpeciesName)) rejectReason = 'RESTRICTED';
+    if (rejectReason) isPlant = false;
+    if (!isPlant && !rejectReason) rejectReason = 'NOT_PLANT';
+
+    return {
+      isPlant,
+      rejectReason,
+      // mock 응답인지 (mocks/species.json 에만 "_mock": true 가 있음). mock 은 식물인지 실제로 판단하지 못함
+      isMock: result._mock === true,
+      name,
+      aliases,
+      luxMin,
+      luxMax,
+      tempMin,
+      tempMax,
+      humidityMin,
+      humidityMax,
+      waterIntervalDays: clampInt(result.waterIntervalDays, waterMin, 60, d.waterIntervalDays),
+      fertilizeIntervalDays: clampInt(result.fertilizeIntervalDays, 7, 365, d.fertilizeIntervalDays),
+      wipeLeafIntervalDays: clampInt(result.wipeLeafIntervalDays, 3, 120, d.wipeLeafIntervalDays),
+      repotIntervalDays: clampInt(result.repotIntervalDays, 90, 1095, d.repotIntervalDays),
+      lifespanType,
+      defaultLifespanDays,
+      careTip: hasForbiddenWords(result.careTip) ? d.careTip : str(result.careTip, d.careTip).slice(0, 120),
+    };
+  },
+};
+
+export const RULES = { character, diagnose, advice, environment, checklist, 'monthly-report': monthlyReport, species };
 
 // ───────── 모양 검사 (P2 프롬프트 실험실이 "AI 원래 응답"을 검사할 때 사용) ─────────
 // 반환: 문제점(한국어) 배열. 빈 배열이면 통과.
@@ -245,6 +382,22 @@ export function checkShape(name, obj) {
       needList('suggestions', 1, 2);
       nullOrText('repotNotice');
       nullOrText('lifespanNotice');
+      break;
+    case 'species':
+      if (typeof obj.isPlant !== 'boolean') issues.push('"isPlant" 는 true 또는 false 여야 해요.');
+      if (obj.rejectReason !== null && obj.rejectReason !== undefined && !SPECIES_REJECT_REASONS.includes(obj.rejectReason))
+        issues.push('"rejectReason" 은 null, NOT_PLANT, NOT_GROWABLE, RESTRICTED 중 하나여야 해요.');
+      if (obj.isPlant === false) break; // 식물이 아니면 나머지 값은 없어도 됨
+      needText('name');
+      needText('careTip');
+      for (const key of [
+        'luxMin', 'luxMax', 'tempMin', 'tempMax', 'humidityMin', 'humidityMax',
+        'waterIntervalDays', 'fertilizeIntervalDays', 'wipeLeafIntervalDays', 'repotIntervalDays',
+      ]) {
+        if (typeof obj[key] !== 'number') issues.push(`"${key}" 가 숫자가 아니에요.`);
+      }
+      if (!LIFESPAN_TYPES.includes(obj.lifespanType))
+        issues.push('"lifespanType" 은 PERENNIAL, ANNUAL, BIENNIAL, HARVEST 중 하나여야 해요.');
       break;
     default:
       issues.push(`알 수 없는 이름이에요: ${name}`);
