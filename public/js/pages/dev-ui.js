@@ -387,12 +387,22 @@ function renderGameSection(root) {
 
 // ===== [P1] 성장 캘린더 테스트 — P1 담당자만 수정 =====
 function renderP1Section(root) {
-  root.innerHTML = html`<h2 class="dev-title">📅 [P1] 성장 캘린더</h2><p class="muted">P1 담당자가 테스트 버튼을 추가해요.</p>`;
+  root.innerHTML = html`<h2 class="dev-title">📅 [P1] 성장 캘린더</h2><p class="muted">사진 진단 mock 은 diagnose-1 / diagnose-2 중 하나를 무작위로 사용해요.</p><div class="row dev-wrap"><button type="button" class="btn btn-secondary btn-sm" data-p1-delete>오늘 사진 기록 지우기</button><a class="btn btn-primary btn-sm" href="#/calendar">성장 캘린더 열기</a></div>`;
+  on(root, 'click', '[data-p1-delete]', async () => {
+    const plant = requirePlant();
+    if (!plant) return;
+    if (!(await confirmModal('오늘 사진 기록을 모두 지울까요? 하루 사진 경험치 테스트를 다시 할 수 있어요.'))) return;
+    try {
+      const { deleteTodaysPhotos } = await import('../services/diagnosis.js');
+      const count = await deleteTodaysPhotos(plant.id, today());
+      toast(count ? `오늘 사진 ${count}장을 지웠어요.` : '오늘 사진 기록이 없어요.', 'success');
+    } catch (error) { toast(error.message || '사진 기록을 지우지 못했어요.', 'error'); }
+  });
 }
 
 // ===== [P2] 프롬프트 실험실 테스트 — P2 담당자만 수정 =====
 function renderP2Section(root) {
-  root.innerHTML = html`<h2 class="dev-title">🧫 [P2] 프롬프트 실험실</h2><p class="muted">P2 담당자가 테스트 버튼을 추가해요.</p>`;
+  root.innerHTML = html`<h2 class="dev-title">🧫 [P2] 프롬프트 실험실</h2><p class="muted">템플릿 버전을 비교하고 응답 JSON 모양을 확인해요.</p><a class="btn btn-primary btn-sm" href="#/prompt-lab">프롬프트 실험실 열기</a>`;
 }
 
 // ===== [P3] 체크리스트 테스트 — P3 담당자만 수정 =====
@@ -451,7 +461,7 @@ function renderP4Section(root) {
     <h2 class="dev-title">🔔 [P4] 알림</h2>
     <p class="muted">현재 식물 기준으로 테스트해요. 결과는 <a href="#/notifications">알림함</a>에서 확인하세요.</p>
     <div class="row dev-wrap">
-      <button type="button" class="btn btn-secondary btn-sm" data-p4="clear">알림 모두 지우기</button>
+      <button type="button" class="btn btn-secondary btn-sm" data-p4="clear">알림 모두 읽음 처리</button>
       <button type="button" class="btn btn-secondary btn-sm" data-p4="test">테스트 알림 만들기(체크리스트·리포트 각 1개)</button>
     </div>
     <pre class="dev-pre" data-p4-result></pre>
@@ -467,7 +477,7 @@ function renderP4Section(root) {
         // 공유 import 줄을 건드리지 않으려고 여기서만 동적 import
         const { markAllRead } = await import('../services/notifications.js');
         await markAllRead();
-        toast('모든 알림을 읽음으로 바꾸어요', 'success');
+        toast('모든 알림을 읽음으로 바꿨어요', 'success');
       } else if (act === 'test') {
         const { notifyChecklistCreated, notifyReportCreated } = await import('../services/notifications.js');
         const { ensureTodayChecklist } = await import('../services/checklists.js');
@@ -488,12 +498,271 @@ function renderP4Section(root) {
 
 // ===== [P5] 환경 분석 테스트 — P5 담당자만 수정 =====
 function renderP5Section(root) {
-  root.innerHTML = html`<h2 class="dev-title">☀️ [P5] 환경 분석</h2><p class="muted">P5 담당자가 테스트 버튼을 추가해요.</p>`;
+  if (!store.get('user')) {
+    root.innerHTML = html`<h2 class="dev-title">☀️ [P5] 환경 분석</h2>${loggedOutNote}`;
+    return;
+  }
+
+  root.innerHTML = html`
+    <h2 class="dev-title">☀️ [P5] 환경 분석</h2>
+    <p class="muted">카메라 없이 가짜 조도(lux 300 / 2,000 / 20,000)로 점수·AI 조언·저장을 한 번에 시험해요.</p>
+    <div class="row dev-wrap">
+      <button type="button" class="btn btn-secondary btn-sm" data-p5-lux="300">가짜 측정값 분석 (300 lux · 부족)</button>
+      <button type="button" class="btn btn-secondary btn-sm" data-p5-lux="2000">가짜 측정값 분석 (2,000 lux · 적정)</button>
+      <button type="button" class="btn btn-secondary btn-sm" data-p5-lux="20000">가짜 측정값 분석 (20,000 lux · 높음)</button>
+      <a class="btn btn-primary btn-sm" href="#/environment">환경 분석 화면 열기</a>
+    </div>
+    <pre class="dev-pre" data-p5-result></pre>
+  `;
+
+  const pre = root.querySelector('[data-p5-result]');
+  on(root, 'click', '[data-p5-lux]', async (event, btn) => {
+    const current = requirePlant();
+    if (!current) return;
+    const lux = Number(btn.dataset.p5Lux);
+    pre.textContent = '분석 중…';
+
+    try {
+      const [{ getSpecies, speciesProfile }, { calcMatchScore, ruleBasedTips, LIGHT_LABEL }, { saveEnvironment }, { addHistory }] =
+        await Promise.all([
+          import('../services/species.js'),
+          import('../utils/envScore.js'),
+          import('../services/environments.js'),
+          import('../services/aiHistory.js'),
+        ]);
+
+      const species = await getSpecies(current.speciesId);
+      const region = store.get('user')?.home?.region || '서울특별시';
+      const homeType = store.get('user')?.home?.homeType || '아파트';
+      let weather = null;
+      try {
+        weather = await getWeather(region);
+      } catch {
+        weather = null;
+      }
+
+      const scored = calcMatchScore({
+        lux,
+        weather,
+        heaterOrAcExposed: false,
+        windowDir: '남향',
+        species,
+      });
+
+      let coach;
+      let isFallback = false;
+      try {
+        coach = await analyzeEnvironment({
+          speciesName: species?.name ?? current.name,
+          profile: speciesProfile(species),
+          measuredLux: lux,
+          weather,
+          homeType,
+          windowDir: '남향',
+          heaterOrAcExposed: false,
+        });
+      } catch {
+        coach = ruleBasedTips({
+          lightLevel: scored.lightLevel,
+          weather,
+          heaterOrAcExposed: false,
+          windowDir: '남향',
+          species,
+        });
+        isFallback = true;
+      }
+
+      await saveEnvironment(current.id, {
+        measuredLux: lux,
+        luxSource: 'manual',
+        weather,
+        windowDir: '남향',
+        heaterOrAcExposed: false,
+        matchScore: scored.score,
+        lightLevel: scored.lightLevel,
+        coach,
+      });
+      await addHistory(current.id, 'ENVIRONMENT', {
+        lux,
+        lightLevel: scored.lightLevel,
+        score: scored.score,
+        humidity: weather?.humidity ?? null,
+        tips: coach.actions.join(' / '),
+      });
+
+      showJson(pre, {
+        measuredLux: lux,
+        score: scored.score,
+        lightLabel: LIGHT_LABEL[scored.lightLevel],
+        breakdown: scored.breakdown,
+        isFallback,
+        coach,
+      });
+      toast(`가짜 측정(${lux} lux) 분석 및 저장 완료`, 'success');
+    } catch (error) {
+      console.warn('[dev][P5] 테스트 실패', error);
+      pre.textContent = `실패: ${error.message}`;
+    }
+  });
 }
 
 // ===== [P6] 월간 리포트 테스트 — P6 담당자만 수정 =====
 function renderP6Section(root) {
-  root.innerHTML = html`<h2 class="dev-title">📄 [P6] 월간 리포트</h2><p class="muted">P6 담당자가 테스트 버튼을 추가해요.</p>`;
+  if (!store.get('user')) {
+    root.innerHTML = html`<h2 class="dev-title">📄 [P6] 월간 리포트</h2>${loggedOutNote}`;
+    return;
+  }
+
+  root.innerHTML = html`
+    <h2 class="dev-title">📄 [P6] 월간 리포트</h2>
+    <p class="muted">P3 없이도 리포트를 시험할 수 있도록 지난달 샘플 기록을 만들고 지웁니다.</p>
+    <div class="row dev-wrap">
+      <button type="button" class="btn btn-secondary btn-sm" data-p6="make-sample">지난달 샘플 기록 만들기</button>
+      <button type="button" class="btn btn-secondary btn-sm" data-p6="clear-sample">샘플 기록 지우기</button>
+      <button type="button" class="btn btn-secondary btn-sm" data-p6="force-report">지난달 리포트 강제 생성</button>
+      <button type="button" class="btn btn-ghost btn-sm" data-p6="delete-report">지난달 리포트 지우기</button>
+      <a class="btn btn-primary btn-sm" href="#/report">리포트 화면 열기</a>
+    </div>
+    <pre class="dev-pre" data-p6-result></pre>
+  `;
+
+  const pre = root.querySelector('[data-p6-result]');
+
+  on(root, 'click', '[data-p6]', async (event, btn) => {
+    const current = requirePlant();
+    if (!current) return;
+    const act = btn.dataset.p6;
+    pre.textContent = '처리 중…';
+
+    try {
+      const [fb, dateUtil, reports] = await Promise.all([
+        import('../core/firebase.js'),
+        import('../utils/date.js'),
+        import('../services/reports.js'),
+      ]);
+      const { db, doc, collection, getDocs, deleteDoc, query, where, writeBatch, serverTimestamp } = fb;
+      const uid = store.get('user')?.uid;
+      const lastMonth = dateUtil.prevMonth(dateUtil.thisMonth());
+      const plantPath = ['users', uid, 'plants', current.id];
+
+      if (act === 'make-sample') {
+        const batch = writeBatch(db);
+        const days = Math.min(20, dateUtil.daysInMonth(lastMonth));
+
+        // 1) 체크리스트 약 20일치 (완료, 미완료, 물주기 연기 혼합)
+        for (let d = 1; d <= days; d++) {
+          const dateStr = `${lastMonth}-${String(d).padStart(2, '0')}`;
+          const items = [
+            {
+              id: 'VENTILATE',
+              category: 'DAILY_MICRO',
+              taskType: 'VENTILATE',
+              title: '창문 열고 환기하기',
+              exp: 5,
+              isCompleted: d % 4 !== 0,
+              completedAt: d % 4 !== 0 ? dateStr : null,
+              dueDate: null,
+              soilMoistureDry: null,
+              postponed: false,
+            },
+            {
+              id: 'CHECK_LEAF',
+              category: 'DAILY_MICRO',
+              taskType: 'CHECK_LEAF',
+              title: '잎 상태 살펴보기',
+              exp: 5,
+              isCompleted: d % 3 !== 0,
+              completedAt: d % 3 !== 0 ? dateStr : null,
+              dueDate: null,
+              soilMoistureDry: null,
+              postponed: false,
+            },
+          ];
+
+          // 5일, 12일, 19일에는 물주기 항목 추가 (12일은 Safe-Lock 연기)
+          if (d === 5 || d === 12 || d === 19) {
+            const postponed = d === 12;
+            items.push({
+              id: 'WATER',
+              category: 'PERIODIC_CARE',
+              taskType: 'WATER',
+              title: '물주기',
+              exp: 20,
+              isCompleted: !postponed,
+              completedAt: !postponed ? dateStr : null,
+              dueDate: dateStr,
+              soilMoistureDry: !postponed,
+              postponed,
+            });
+          }
+
+          batch.set(doc(db, ...plantPath, 'checklists', dateStr), {
+            items,
+            generatedBy: 'DEFAULT',
+            sample: true,
+            createdAt: serverTimestamp(),
+          });
+        }
+
+        // 2) 사진 3장 (작은 SVG data URL)
+        const svgDataUrl =
+          'data:image/svg+xml;utf8,' +
+          encodeURIComponent(
+            '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" fill="#e6f4ea"/><circle cx="32" cy="30" r="14" fill="#5ba672"/></svg>',
+          );
+        for (const day of ['03', '10', '18']) {
+          const ref = doc(collection(db, ...plantPath, 'photos'));
+          batch.set(ref, {
+            image: svgDataUrl,
+            date: `${lastMonth}-${day}`,
+            diagnosis: null,
+            sample: true,
+            createdAt: serverTimestamp(),
+          });
+        }
+
+        // 3) aiHistory 4개
+        const sampleHistories = [
+          { type: 'ENVIRONMENT', summary: { date: `${lastMonth}-04`, score: 85, lightLevel: 'OK', tips: '간접광이 좋아요' } },
+          { type: 'PHOTO_DIAGNOSIS', summary: { date: `${lastMonth}-10`, summaryTag: '건강해요' } },
+          { type: 'CHECKLIST', summary: { date: `${lastMonth}-15`, tip: '환기를 잘 챙겼어요' } },
+          { type: 'ENVIRONMENT', summary: { date: `${lastMonth}-19`, score: 78, lightLevel: 'OK', tips: '습도 유지 좋아요' } },
+        ];
+        for (const h of sampleHistories) {
+          const ref = doc(collection(db, ...plantPath, 'aiHistory'));
+          batch.set(ref, { ...h, sample: true, createdAt: serverTimestamp() });
+        }
+
+        await batch.commit();
+        const preview = await reports.computeMonthlyStats(current.id, lastMonth);
+        showJson(pre, { month: lastMonth, checklistsCreated: days, photos: 3, aiHistory: 4, stats: preview });
+        toast(`${lastMonth} 샘플 기록을 만들었어요`, 'success');
+      } else if (act === 'clear-sample') {
+        let deleted = 0;
+        for (const sub of ['checklists', 'photos', 'aiHistory']) {
+          const snap = await getDocs(query(collection(db, ...plantPath, sub), where('sample', '==', true)));
+          for (const d of snap.docs) {
+            await deleteDoc(d.ref);
+            deleted++;
+          }
+        }
+        showJson(pre, { deletedSampleDocs: deleted });
+        toast(`샘플 기록 ${deleted}개를 지웠어요`, 'success');
+      } else if (act === 'force-report') {
+        await deleteDoc(doc(db, ...plantPath, 'monthlyReports', lastMonth));
+        const report = await reports.generateReport(current, lastMonth);
+        showJson(pre, report);
+        toast(`${lastMonth} 리포트를 생성했어요`, 'success');
+      } else if (act === 'delete-report') {
+        await deleteDoc(doc(db, ...plantPath, 'monthlyReports', lastMonth));
+        pre.textContent = `${lastMonth} 리포트를 삭제했어요.`;
+        toast(`${lastMonth} 리포트를 지웠어요`, 'success');
+      }
+    } catch (error) {
+      console.warn('[dev][P6] 테스트 실패', error);
+      pre.textContent = `실패: ${error.message}`;
+    }
+  });
 }
 
 // 구역 목록 (위에서부터 순서대로 그림)

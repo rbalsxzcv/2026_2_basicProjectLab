@@ -84,7 +84,9 @@ export default {
       if (!disposed) draw();
     };
 
-    const removeClick = on(container, 'click', '[data-date], [data-month], [data-record], [data-plant]', async (event, target) => {
+    // '.empty-state .btn' = 사진이 없을 때 나오는 [사진 기록하기] 버튼 → [📷 오늘 사진 기록하기] 와 같은 동작
+    const removeClick = on(container, 'click', '[data-date], [data-month], [data-record], [data-plant], .empty-state .btn', async (event, target) => {
+      if (target.matches('.empty-state .btn')) event.preventDefault(); // 같은 #/calendar 주소라 이동하지 않음
       if (target.dataset.date) { selectedDate = target.dataset.date; draw(); return; }
       if (target.dataset.month) {
         const next = target.dataset.month === 'prev' ? prevMonth(month) : (() => { const d = new Date(`${month}-01T12:00:00Z`); d.setUTCMonth(d.getUTCMonth() + 1); return d.toISOString().slice(0,7); })();
