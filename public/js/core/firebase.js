@@ -8,14 +8,7 @@
  *   예) import { db, doc, getDoc } from '../core/firebase.js';
  *   그래서 CDN 주소와 SDK 버전은 이 파일 한 곳에만 있습니다.
  *
- * ───────── App Check 디버그 토큰 등록 방법 (localhost 테스트용, 사람마다 한 번) ─────────
- * 1) firebase-config.js 에 appCheckSiteKey 를 넣고 http://localhost:5500 으로 앱을 엽니다.
- * 2) 브라우저 개발자 도구(F12) → Console 에
- *    "App Check debug token: xxxxxxxx-xxxx-..." 문장이 찍힙니다. 그 토큰을 복사합니다.
- * 3) Firebase 콘솔 → [App Check] → [앱] 탭 → 내 웹 앱 오른쪽 ⋮ → [디버그 토큰 관리]
- *    → [디버그 토큰 추가] 에 붙여 넣고 저장합니다.
- * 4) 브라우저(또는 시크릿 창)마다 토큰이 다르므로, 팀원 각자 자기 토큰을 등록해야 합니다.
- *    디버그 토큰은 비밀번호처럼 다루고 Git이나 채팅방에 올리지 마세요.
+ * localhost 에서 AI real 모드를 쓰려면 App Check 디버그 토큰 등록이 필요합니다 → manual/03-real-ai-mode.md
  */
 
 // SDK 버전은 여기 한 곳에서만 바꿉니다. (공식 CDN 예제: https://firebase.google.com/docs/web/alt-setup)
@@ -81,7 +74,7 @@ if (isFirebaseConfigured) {
   // ── App Check: AI를 쓰기 "전에" 먼저 켜야 합니다 ──
   if (appCheckSiteKey) {
     try {
-      // localhost 에서는 reCAPTCHA 대신 디버그 토큰을 씁니다. (위 주석의 등록 방법 참고)
+      // localhost 에서는 reCAPTCHA 대신 디버그 토큰을 씁니다. (콘솔에 찍힌 토큰을 Firebase 에 등록)
       if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
         self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
       }

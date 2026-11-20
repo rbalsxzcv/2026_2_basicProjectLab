@@ -1,0 +1,5 @@
+[
+  { "label": "목록에 없는 식물", "input": { "speciesName": "아레카야자" } },
+  { "label": "식물이 아닌 이름", "input": { "speciesName": "쓰레기통" } },
+  { "label": "기를 수 없는 대상", "input": { "speciesName": "꽃다발" } }
+]

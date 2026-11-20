@@ -2,7 +2,8 @@
  * 파일: public/js/pages/dev-ui.js
  * 역할: 개발용 테스트 화면 (#/dev) — 공용 UI, AI·날씨, 공용 테스트 버튼, 페이지별 테스트 구역, 게임 테스트
  * 사용하는 파일: ui/components.js, ui/celebrate.js, core/ai.js, core/weather.js, core/ai-config.js, ai/usage.js,
- *               services/plants.js, services/game.js, services/dev-tools.js, utils/dom.js, utils/date.js
+ *               services/(plants, game, checklists, notifications, species, environments, aiHistory, reports, dev-tools).js,
+ *               utils/(dom, date, image, envScore).js
  * 담당: C1 (공용 UI) · C2 (AI) · C5 (공용 테스트 + 페이지 구역) · C6 (게임 테스트)
  *
  * ★ 배포할 때는 core/routes.js 에서 '/dev' 줄을 지우세요. (개발용 화면)
@@ -36,8 +37,23 @@ import {
 import { getWeather } from '../core/weather.js';
 import { getCurrentPlant } from '../services/plants.js';
 import { awardExp, markCared, setAlert, refreshPlantState } from '../services/game.js';
-import { devSetScheduleDueDate, devDeleteChecklist, devDumpPlant } from '../services/dev-tools.js';
-import { today, addDays } from '../utils/date.js';
+import { ensureTodayChecklist } from '../services/checklists.js';
+import { markAllRead, notifyChecklistCreated, notifyReportCreated } from '../services/notifications.js';
+import { getSpecies, speciesProfile } from '../services/species.js';
+import { saveEnvironment } from '../services/environments.js';
+import { addHistory } from '../services/aiHistory.js';
+import { computeMonthlyStats, generateReport } from '../services/reports.js';
+import { calcMatchScore, ruleBasedTips, LIGHT_LABEL } from '../utils/envScore.js';
+import {
+  devSetScheduleDueDate,
+  devDeleteChecklist,
+  devDumpPlant,
+  devDeletePhotosOn,
+  devCreateSampleMonth,
+  devClearSamples,
+  devDeleteReport,
+} from '../services/dev-tools.js';
+import { today, addDays, thisMonth, prevMonth } from '../utils/date.js';
 import { fileToDataUrl } from '../utils/image.js';
 
 // ───────── 작은 도우미 ─────────
@@ -387,22 +403,38 @@ function renderGameSection(root) {
 
 // ===== [P1] 성장 캘린더 테스트 — P1 담당자만 수정 =====
 function renderP1Section(root) {
-  root.innerHTML = html`<h2 class="dev-title">📅 [P1] 성장 캘린더</h2><p class="muted">사진 진단 mock 은 diagnose-1 / diagnose-2 중 하나를 무작위로 사용해요.</p><div class="row dev-wrap"><button type="button" class="btn btn-secondary btn-sm" data-p1-delete>오늘 사진 기록 지우기</button><a class="btn btn-primary btn-sm" href="#/calendar">성장 캘린더 열기</a></div>`;
+  if (!store.get('user')) {
+    root.innerHTML = html`<h2 class="dev-title">📅 [P1] 성장 캘린더</h2>${loggedOutNote}`;
+    return;
+  }
+  root.innerHTML = html`
+    <h2 class="dev-title">📅 [P1] 성장 캘린더</h2>
+    <p class="muted">사진 진단 mock 은 diagnose-1(정상) / diagnose-2(관찰 필요) 중 하나를 무작위로 사용해요.</p>
+    <div class="row dev-wrap">
+      <button type="button" class="btn btn-secondary btn-sm" data-p1-delete>오늘 사진 기록 지우기</button>
+      <a class="btn btn-primary btn-sm" href="#/calendar">성장 캘린더 열기</a>
+    </div>
+  `;
   on(root, 'click', '[data-p1-delete]', async () => {
     const plant = requirePlant();
     if (!plant) return;
     if (!(await confirmModal('오늘 사진 기록을 모두 지울까요? 하루 사진 경험치 테스트를 다시 할 수 있어요.'))) return;
     try {
-      const { deleteTodaysPhotos } = await import('../services/diagnosis.js');
-      const count = await deleteTodaysPhotos(plant.id, today());
+      const count = await devDeletePhotosOn(plant.id, today());
       toast(count ? `오늘 사진 ${count}장을 지웠어요.` : '오늘 사진 기록이 없어요.', 'success');
-    } catch (error) { toast(error.message || '사진 기록을 지우지 못했어요.', 'error'); }
+    } catch (error) {
+      toast(error.message || '사진 기록을 지우지 못했어요.', 'error');
+    }
   });
 }
 
 // ===== [P2] 프롬프트 실험실 테스트 — P2 담당자만 수정 =====
 function renderP2Section(root) {
-  root.innerHTML = html`<h2 class="dev-title">🧫 [P2] 프롬프트 실험실</h2><p class="muted">템플릿 버전을 비교하고 응답 JSON 모양을 확인해요.</p><a class="btn btn-primary btn-sm" href="#/prompt-lab">프롬프트 실험실 열기</a>`;
+  root.innerHTML = html`
+    <h2 class="dev-title">🧫 [P2] 프롬프트 실험실</h2>
+    <p class="muted">템플릿 버전을 비교하고 응답 JSON 모양을 확인해요.</p>
+    <a class="btn btn-primary btn-sm" href="#/prompt-lab">프롬프트 실험실 열기</a>
+  `;
 }
 
 // ===== [P3] 체크리스트 테스트 — P3 담당자만 수정 =====
@@ -434,8 +466,6 @@ function renderP3Section(root) {
         } catch {
           /* 아직 없으면 그냥 만듦 */
         }
-        // 공유 import 줄을 건드리지 않으려고 여기서만 동적 import
-        const { ensureTodayChecklist } = await import('../services/checklists.js');
         const { checklist, created } = await ensureTodayChecklist(current);
         showJson(pre, { created, generatedBy: checklist?.generatedBy, items: checklist?.items });
         toast(created ? '오늘 체크리스트를 다시 만들었어요' : '오늘 체크리스트가 이미 있었어요', 'success');
@@ -474,14 +504,9 @@ function renderP4Section(root) {
     try {
       const act = el.dataset.p4;
       if (act === 'clear') {
-        // 공유 import 줄을 건드리지 않으려고 여기서만 동적 import
-        const { markAllRead } = await import('../services/notifications.js');
         await markAllRead();
         toast('모든 알림을 읽음으로 바꿨어요', 'success');
       } else if (act === 'test') {
-        const { notifyChecklistCreated, notifyReportCreated } = await import('../services/notifications.js');
-        const { ensureTodayChecklist } = await import('../services/checklists.js');
-        const { prevMonth, thisMonth } = await import('../utils/date.js');
         const { checklist } = await ensureTodayChecklist(current);
         await notifyChecklistCreated(current, checklist);
         const reportMonth = prevMonth(thisMonth());
@@ -523,17 +548,9 @@ function renderP5Section(root) {
     pre.textContent = '분석 중…';
 
     try {
-      const [{ getSpecies, speciesProfile }, { calcMatchScore, ruleBasedTips, LIGHT_LABEL }, { saveEnvironment }, { addHistory }] =
-        await Promise.all([
-          import('../services/species.js'),
-          import('../utils/envScore.js'),
-          import('../services/environments.js'),
-          import('../services/aiHistory.js'),
-        ]);
-
       const species = await getSpecies(current.speciesId);
       const region = store.get('user')?.home?.region || '서울특별시';
-      const homeType = store.get('user')?.home?.homeType || '아파트';
+      const homeType = store.get('user')?.home?.homeType || null;
       let weather = null;
       try {
         weather = await getWeather(region);
@@ -563,6 +580,7 @@ function renderP5Section(root) {
         });
       } catch {
         coach = ruleBasedTips({
+          lux,
           lightLevel: scored.lightLevel,
           weather,
           heaterOrAcExposed: false,
@@ -635,126 +653,24 @@ function renderP6Section(root) {
     pre.textContent = '처리 중…';
 
     try {
-      const [fb, dateUtil, reports] = await Promise.all([
-        import('../core/firebase.js'),
-        import('../utils/date.js'),
-        import('../services/reports.js'),
-      ]);
-      const { db, doc, collection, getDocs, deleteDoc, query, where, writeBatch, serverTimestamp } = fb;
-      const uid = store.get('user')?.uid;
-      const lastMonth = dateUtil.prevMonth(dateUtil.thisMonth());
-      const plantPath = ['users', uid, 'plants', current.id];
+      const lastMonth = prevMonth(thisMonth());
 
       if (act === 'make-sample') {
-        const batch = writeBatch(db);
-        const days = Math.min(20, dateUtil.daysInMonth(lastMonth));
-
-        // 1) 체크리스트 약 20일치 (완료, 미완료, 물주기 연기 혼합)
-        for (let d = 1; d <= days; d++) {
-          const dateStr = `${lastMonth}-${String(d).padStart(2, '0')}`;
-          const items = [
-            {
-              id: 'VENTILATE',
-              category: 'DAILY_MICRO',
-              taskType: 'VENTILATE',
-              title: '창문 열고 환기하기',
-              exp: 5,
-              isCompleted: d % 4 !== 0,
-              completedAt: d % 4 !== 0 ? dateStr : null,
-              dueDate: null,
-              soilMoistureDry: null,
-              postponed: false,
-            },
-            {
-              id: 'CHECK_LEAF',
-              category: 'DAILY_MICRO',
-              taskType: 'CHECK_LEAF',
-              title: '잎 상태 살펴보기',
-              exp: 5,
-              isCompleted: d % 3 !== 0,
-              completedAt: d % 3 !== 0 ? dateStr : null,
-              dueDate: null,
-              soilMoistureDry: null,
-              postponed: false,
-            },
-          ];
-
-          // 5일, 12일, 19일에는 물주기 항목 추가 (12일은 Safe-Lock 연기)
-          if (d === 5 || d === 12 || d === 19) {
-            const postponed = d === 12;
-            items.push({
-              id: 'WATER',
-              category: 'PERIODIC_CARE',
-              taskType: 'WATER',
-              title: '물주기',
-              exp: 20,
-              isCompleted: !postponed,
-              completedAt: !postponed ? dateStr : null,
-              dueDate: dateStr,
-              soilMoistureDry: !postponed,
-              postponed,
-            });
-          }
-
-          batch.set(doc(db, ...plantPath, 'checklists', dateStr), {
-            items,
-            generatedBy: 'DEFAULT',
-            sample: true,
-            createdAt: serverTimestamp(),
-          });
-        }
-
-        // 2) 사진 3장 (작은 SVG data URL)
-        const svgDataUrl =
-          'data:image/svg+xml;utf8,' +
-          encodeURIComponent(
-            '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" fill="#e6f4ea"/><circle cx="32" cy="30" r="14" fill="#5ba672"/></svg>',
-          );
-        for (const day of ['03', '10', '18']) {
-          const ref = doc(collection(db, ...plantPath, 'photos'));
-          batch.set(ref, {
-            image: svgDataUrl,
-            date: `${lastMonth}-${day}`,
-            diagnosis: null,
-            sample: true,
-            createdAt: serverTimestamp(),
-          });
-        }
-
-        // 3) aiHistory 4개
-        const sampleHistories = [
-          { type: 'ENVIRONMENT', summary: { date: `${lastMonth}-04`, score: 85, lightLevel: 'OK', tips: '간접광이 좋아요' } },
-          { type: 'PHOTO_DIAGNOSIS', summary: { date: `${lastMonth}-10`, summaryTag: '건강해요' } },
-          { type: 'CHECKLIST', summary: { date: `${lastMonth}-15`, tip: '환기를 잘 챙겼어요' } },
-          { type: 'ENVIRONMENT', summary: { date: `${lastMonth}-19`, score: 78, lightLevel: 'OK', tips: '습도 유지 좋아요' } },
-        ];
-        for (const h of sampleHistories) {
-          const ref = doc(collection(db, ...plantPath, 'aiHistory'));
-          batch.set(ref, { ...h, sample: true, createdAt: serverTimestamp() });
-        }
-
-        await batch.commit();
-        const preview = await reports.computeMonthlyStats(current.id, lastMonth);
-        showJson(pre, { month: lastMonth, checklistsCreated: days, photos: 3, aiHistory: 4, stats: preview });
+        const created = await devCreateSampleMonth(current.id, lastMonth);
+        const stats = await computeMonthlyStats(current.id, lastMonth);
+        showJson(pre, { month: lastMonth, ...created, stats });
         toast(`${lastMonth} 샘플 기록을 만들었어요`, 'success');
       } else if (act === 'clear-sample') {
-        let deleted = 0;
-        for (const sub of ['checklists', 'photos', 'aiHistory']) {
-          const snap = await getDocs(query(collection(db, ...plantPath, sub), where('sample', '==', true)));
-          for (const d of snap.docs) {
-            await deleteDoc(d.ref);
-            deleted++;
-          }
-        }
+        const deleted = await devClearSamples(current.id);
         showJson(pre, { deletedSampleDocs: deleted });
         toast(`샘플 기록 ${deleted}개를 지웠어요`, 'success');
       } else if (act === 'force-report') {
-        await deleteDoc(doc(db, ...plantPath, 'monthlyReports', lastMonth));
-        const report = await reports.generateReport(current, lastMonth);
+        await devDeleteReport(current.id, lastMonth);
+        const report = await generateReport(current, lastMonth);
         showJson(pre, report);
         toast(`${lastMonth} 리포트를 생성했어요`, 'success');
       } else if (act === 'delete-report') {
-        await deleteDoc(doc(db, ...plantPath, 'monthlyReports', lastMonth));
+        await devDeleteReport(current.id, lastMonth);
         pre.textContent = `${lastMonth} 리포트를 삭제했어요.`;
         toast(`${lastMonth} 리포트를 지웠어요`, 'success');
       }

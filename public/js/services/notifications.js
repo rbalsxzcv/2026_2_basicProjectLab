@@ -7,7 +7,7 @@
  * 사용하는 파일: core/firebase.js, core/store.js, utils/date.js, services/checklists.js (summarize)
  * 담당: P4
  *
- * ★ 함수 이름·인자·반환 형식은 C5 뼈대 그대로 유지.
+ * ★ 함수 이름·인자·반환 형식은 00_MAIN §5 계약 그대로 유지 (startup.js 가 사용).
  * ★ 브라우저 알림은 "탭이 화면에 없을 때만" 띄웁니다 (앱이 보여 있으면 알림함으로 충분).
  * ★ 30일보다 오래된 알림은 목록에서만 숨기고, 삭제하지는 않습니다.
  */

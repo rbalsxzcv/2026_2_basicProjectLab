@@ -31,6 +31,7 @@ export default {
     let alive = true;
     let screenDate = today(); // 진입 시 날짜 (자정 넘기 대비)
     let busy = false; // 완료 처리 중 (버튼 잠금)
+    let currentItems = []; // 지금 화면에 그려진 항목 (버튼 → 항목 찾기용)
 
     // ───────── 식물 고르기: 알림 링크(?plant=id) 우선, 없으면 현재 식물 ─────────
     let plant = null;
@@ -65,7 +66,7 @@ export default {
       const allDone = s.total > 0 && s.remaining === 0;
       const items = checklist?.items ?? [];
       const daily = items.filter((i) => i.category === 'DAILY_MICRO');
-      // 미룬 물주기는 아래 "미룸" 카드에서만 보여요 (여기서도 나오면 두 번그려짐)
+      // 미룬 물주기는 아래 "미룸" 카드에서만 보여 줌 (두 번 그려지지 않게)
       const periodic = items.filter((i) => i.category === 'PERIODIC_CARE' && !i.postponed);
       const postponed = items.filter((i) => i.postponed);
       const generatedBy = checklist?.generatedBy;
@@ -141,7 +142,7 @@ export default {
               `
             : ''}
 
-          <!-- 사진으로 상태 확인하기 (P1 완성 전엔 사진만 기록) -->
+          <!-- 사진으로 상태 확인하기 (ui/diagnosis-flow.js 재사용) -->
           <button type="button" class="btn btn-secondary btn-block photo-check-btn" data-photo ${busy ? 'disabled' : ''}>
             📷 사진으로 상태 확인하기
           </button>
@@ -293,15 +294,15 @@ export default {
         if (!item) return;
         await handleComplete(item, el);
       }),
-      // 칩 클릭 → 해당 식물로 전환 (plant 변수만 교체, offs 재정의 방지)
+      // 칩 클릭 → 해당 식물로 전환. 그 식물의 오늘 체크리스트가 아직 없을 수 있으므로 init() 으로 만들고 그림
       on(container, 'click', '[data-select-plant]', (event, el) => {
+        if (busy) return;
         const next = (store.get('plants') ?? []).find((p) => p.id === el.dataset.selectPlant);
         if (!next || next.id === plant.id) return;
         selectPlant(next.id);
         plant = next;
-        // init()을 다시 부르면 offs가 재정의되지 않아 이벤트가 누적됨
-        // 대신 plant만 교체하고 draw()로 화면만 갱신
-        refresh();
+        currentItems = [];
+        init();
       }),
       on(container, 'click', '[data-photo]', async () => {
         if (busy) return;
@@ -323,8 +324,6 @@ export default {
         }
       }),
     ];
-
-    let currentItems = [];
 
     function findItem(id) {
       return currentItems.find((i) => i.id === id) ?? null;
@@ -349,10 +348,13 @@ export default {
         </section>
       `;
 
+      const target = plant;
       try {
-        const { checklist } = await ensureTodayChecklist(plant);
+        const { checklist } = await ensureTodayChecklist(target);
+        // 만드는 사이 다른 식물로 바꿨으면 옛 결과는 그리지 않음
+        if (!alive || target.id !== plant.id) return;
         currentItems = checklist?.items ?? [];
-        if (alive) draw(checklist);
+        draw(checklist);
       } catch (error) {
         console.warn('[checklist] 오늘 체크리스트 생성 실패', error);
         if (alive) {

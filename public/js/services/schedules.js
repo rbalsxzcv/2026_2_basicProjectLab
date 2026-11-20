@@ -63,8 +63,8 @@ export async function listSchedules(plantId) {
   return list.sort((a, b) => PERIODIC_TYPES.indexOf(a.taskType) - PERIODIC_TYPES.indexOf(b.taskType));
 }
 
-// ───────── C5: 아래 함수들을 추가 ─────────
-// (일정은 식물마다 4개뿐이라 전부 읽은 뒤 화면 쪽에서 걸러도 충분히 빠릅니다)
+// ───────── C5: 예정일 계산 · 완료 · 연기 ─────────
+// (일정은 식물마다 4개뿐이라 전부 읽은 뒤 브라우저에서 걸러도 충분히 빠릅니다)
 
 // 예정일이 date 이하인(오늘 할 차례이거나 지난) 일정
 export async function getDueSchedules(plantId, date = today()) {

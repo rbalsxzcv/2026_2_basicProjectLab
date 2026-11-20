@@ -3,7 +3,9 @@
  * 역할: 월간 리포트 통계 집계·AI 생성·저장 — plants/{id}/monthlyReports/{YYYY-MM}
  * 사용하는 파일: core/firebase.js, core/store.js, core/ai.js, services/species.js,
  *               services/photos.js, services/aiHistory.js, utils/date.js
- * 담당: P6 (C5 뼈대 완성)
+ * 담당: P6
+ *
+ * ★ 함수 이름·인자·반환 형식은 00_MAIN §5 계약 그대로 유지 (startup.js, report.js 가 사용).
  */
 
 import {
@@ -242,13 +244,19 @@ export async function ensureLastMonthReports(plants) {
       results.push({ plantId: plant.id, month, created: false });
       continue;
     }
-    const existing = await getReport(plant.id, month);
-    if (existing) {
+    // 식물 하나가 실패해도 다음 식물은 계속 만들도록 식물마다 따로 감쌈
+    try {
+      const existing = await getReport(plant.id, month);
+      if (existing) {
+        results.push({ plantId: plant.id, month, created: false });
+        continue;
+      }
+      await generateReport(plant, month);
+      results.push({ plantId: plant.id, month, created: true });
+    } catch (error) {
+      console.warn('[reports] 지난달 리포트 생성 실패', plant.id, error);
       results.push({ plantId: plant.id, month, created: false });
-      continue;
     }
-    await generateReport(plant, month);
-    results.push({ plantId: plant.id, month, created: true });
   }
 
   return results;

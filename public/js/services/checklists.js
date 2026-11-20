@@ -8,7 +8,7 @@
  *               services/environments.js, services/species.js, utils/date.js
  * 담당: P3
  *
- * ★ 함수 이름·인자·반환 형식은 C5 뼈대 그대로 유지 (main.js, startup.js 가 사용).
+ * ★ 함수 이름·인자·반환 형식은 00_MAIN §5 계약 그대로 유지 (main.js, startup.js, notifications.js 가 사용).
  */
 
 import { db, doc, getDoc, runTransaction, serverTimestamp } from '../core/firebase.js';

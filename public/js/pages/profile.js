@@ -1,13 +1,14 @@
 /**
  * 파일: public/js/pages/profile.js
  * 역할: 내 정보 화면 (#/profile) — 닉네임·집 정보 보기/수정, 비밀번호 변경, 메뉴, 로그아웃
- * 사용하는 파일: services/users.js, services/auth.js, ui/components.js, utils/dom.js, utils/date.js
+ * 사용하는 파일: core/store.js, core/router.js, services/users.js, services/auth.js, ui/components.js, utils/dom.js, utils/date.js
  * 담당: C3
  */
 
 import { html, on } from '../utils/dom.js';
 import { toast, openModal, confirmModal } from '../ui/components.js';
 import { store } from '../core/store.js';
+import { navigate } from '../core/router.js';
 import { getProfile, createProfile, updateProfile, loadCurrentUserProfile } from '../services/users.js';
 import { logOut, changePassword, validatePassword, authErrorMessage, currentLoginId } from '../services/auth.js';
 import { toDateStr } from '../utils/date.js';
@@ -311,6 +312,8 @@ export default {
           await createProfile(uid, { loginId: currentLoginId(), nickname, region, homeType: form.homeType.value });
           profile = await loadCurrentUserProfile();
         });
+        // 가입 직후라 식물이 없으면 원래 가야 했던 식물 등록 화면으로 안내
+        if (alive && profile && (store.get('plants') ?? []).length === 0) navigate('/plants/new');
       }
     });
 

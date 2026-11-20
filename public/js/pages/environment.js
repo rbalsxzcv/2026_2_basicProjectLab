@@ -69,7 +69,8 @@ export default {
       cameraNotice: '',
       // ② 날씨 상태
       region: store.get('user')?.home?.region ?? '',
-      homeType: store.get('user')?.home?.homeType ?? '아파트',
+      homeType: store.get('user')?.home?.homeType || '', // 내 정보에서 "선택 안 함"이면 빈 값
+      analyzing: false, // [분석하기] 처리 중 (두 번 저장 방지)
       weather: null,
       weatherLoading: false,
       weatherError: false,
@@ -234,7 +235,7 @@ export default {
 
     function drawAnalyzeButton() {
       const btn = container.querySelector('[data-act="analyze"]');
-      if (btn) btn.disabled = state.measuredLux === null || state.measuring;
+      if (btn) btn.disabled = state.measuredLux === null || state.measuring || state.analyzing;
     }
 
     function drawResult() {
@@ -410,7 +411,7 @@ export default {
             </label>
 
             <div class="env-home-line">
-              <span>주거 형태: <strong>${state.homeType}</strong></span>
+              <span>주거 형태: <strong>${state.homeType || '선택 안 함'}</strong></span>
               <a href="#/profile">내 정보에서 수정</a>
             </div>
           </section>
@@ -478,8 +479,18 @@ export default {
 
     // 점수 계산 + AI 조언 + Firestore 자동 저장
     async function runAnalysis() {
-      if (state.measuredLux === null || !state.plant) return;
+      if (state.measuredLux === null || !state.plant || state.analyzing) return;
+      state.analyzing = true;
+      drawAnalyzeButton();
+      try {
+        await analyzeAndSave();
+      } finally {
+        state.analyzing = false;
+        if (!disposed) drawAnalyzeButton();
+      }
+    }
 
+    async function analyzeAndSave() {
       const species = state.species;
       const scored = calcMatchScore({
         lux: state.measuredLux,
@@ -498,13 +509,14 @@ export default {
           profile: speciesProfile(species),
           measuredLux: state.measuredLux,
           weather: state.weather,
-          homeType: state.homeType,
+          homeType: state.homeType || null,
           windowDir: state.windowDir,
           heaterOrAcExposed: state.heaterOrAcExposed,
         });
       } catch (error) {
         console.warn('[environment] AI 분석 실패 → 규칙 기반 폴백', error);
         coach = ruleBasedTips({
+          lux: state.measuredLux,
           lightLevel: scored.lightLevel,
           weather: state.weather,
           heaterOrAcExposed: state.heaterOrAcExposed,

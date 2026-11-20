@@ -1,194 +1,181 @@
-# AI 반려식물 코치 — 4인 협업용 바이브 코딩 지침
+# AI 반려식물 코치 🌱
 
-기술개발 명세서 v2를 바탕으로, AI 코딩 도구에 넣을 지침을 **공통 6개 + 페이지 6개**로 나눈 것입니다.
-**공통(C1~C6)은 팀원 A 한 명이** 만들고, 끝나면 공통 인터페이스를 동결한 뒤 **페이지(P1~P6)를 팀원 B·C·D가 2개씩 맡아 동시에** 만듭니다.
+식물을 처음 키우는 사람이 AI 코치와 함께 관리 습관을 만들도록 돕는 웹앱 프로토타입입니다.
+식물마다 귀여운 **데포르메(치비) 캐릭터**가 생기고, 체크리스트를 마칠수록 경험치가 쌓여 캐릭터가 자랍니다.
 
-> 이 README만 한국어이고, AI에 넣는 지침 파일(00_MAIN, C*, P*)은 토큰을 줄이기 위해 영어로 썼습니다. 화면에 보이는 문구와 AI 프롬프트 템플릿 본문은 한국어 그대로입니다.
+**지키는 원칙 4가지**
 
-## 폴더 구성
+1. **과습 방지(Safe-Lock)** — "흙이 말랐는지" 확인 없이는 물주기를 완료할 수 없습니다. 축축하면 벌점 없이 2일 연기.
+2. **대화형 진단** — AI 는 사진만 보고 단정하지 않습니다. 증상을 관찰하고 흙 상태를 되물은 뒤 처방합니다.
+3. **Anti-Guilt** — 시들거나 슬픈 그림, 겁주는 문구, 벌점이 없습니다. 밀린 일정은 "차분히 기다리는 중"으로만 표현합니다.
+4. **AI 맥락 절약** — 지난 AI 분석은 사진 없이 짧은 JSON 요약으로만 저장하고, 다음 호출에 최근 몇 개만 보냅니다.
 
-```text
-vibe/
-├─ README.md                    ← 지금 이 파일 (사람용, 한국어)
-├─ 00_MAIN.md                   ← 모든 작업에 항상 함께 넣는 메인 지침 (공통 약속·소유권 규칙)
-├─ common/                      ← [공통] 팀원 A 혼자, C1 → C6 순서
-│  ├─ C1_shell.md                 앱 셸(index.html·app.js), 라우터, 공통 UI, Firebase·App Check 연결
-│  ├─ C2_ai-weather.md            AI 어댑터(mock + Firebase AI Logic), 날씨, 프롬프트 템플릿, mock 응답
-│  ├─ C3_auth.md                  로그인 / 회원가입 / 회원정보
-│  ├─ C4_plant.md                 식물 등록 / 식물 관리 / 데포르메 캐릭터
-│  ├─ C5_shared-services.md       공유 데이터 서비스 + 페이지용 뼈대 + 시작 작업 연결 + 테스트 도구
-│  └─ C6_main-game.md             메인 게임 화면, 경험치·레벨·상태 머신 → 동결
-└─ pages/                       ← [페이지] 팀원 B·C·D가 동시에
-   ├─ P1_calendar.md              성장 캘린더 · 대화형 사진 진단          (B)
-   ├─ P2_prompt-lab.md            프롬프트 실험실 · 템플릿화 절차          (B)
-   ├─ P3_checklist.md             AI 체크리스트 · 과습 방지 Safe-Lock      (C)
-   ├─ P4_notifications.md         알림함 (+ 선택: 브라우저 알림)           (C)
-   ├─ P5_environment.md           AI 환경 분석 (조도·날씨·점수)            (D)
-   └─ P6_report.md                월간 리포트                              (D)
-```
+---
 
-## 이전 버전에서 바뀐 점
+## 빠른 시작
 
-| 항목 | 이전 | 지금 |
-| :--- | :--- | :--- |
-| 백엔드 | Node.js + Express 서버(AI·날씨 프록시) | **서버 없음. Firebase + AI API 호출만** 사용 |
-| AI 호출 | 서버 `/api/ai/*` → AI 제공자 | 브라우저에서 **Firebase AI Logic**(Gemini Developer API)으로 직접 호출. AI 키가 코드에 없고, App Check가 보호 |
-| 날씨 | 서버에서 기상청 API(키 필요, 격자 변환) | 브라우저에서 **Open-Meteo**(키 없는 공개 API, 위·경도 그대로 사용) |
-| 설치·실행 | `npm install` → `npm start` | 설치 없음. VS Code **Live Server** 또는 `python -m http.server`로 `public/` 열기 |
-| 프롬프트 시험 도구 | 명령줄 `npm run try-prompt` | 브라우저 화면 `#/prompt-lab` (P2) |
-| 분담 | 묶음 1을 4명이 함께 → 기능 4묶음을 1명씩 | **공통을 1명(A)** → **페이지 6개를 3명(B·C·D)이 2개씩** |
-| 시작 작업(`startup.js`) | 기능 묶음이 구역을 나눠 수정 | 공통에서 **뼈대와 미리 연결 완료** → 페이지 담당은 이 파일을 건드리지 않음 |
-
-기획 내용(화면 구성, 데이터 구조, 경험치 규칙, 문구, 완료 기준)은 바뀌지 않았습니다.
-
-## 역할 분담
-
-| 팀원 | 맡는 지침 | 분량 | 특징 | 이런 팀원에게 추천 |
-| :--- | :--- | :--- | :--- | :--- |
-| **A (공통)** | C1~C6 | 대 | 앱 전체의 뼈대·로그인·식물 등록·메인·AI 연결. 동결 후에는 **통합 담당**(PR 리뷰, 공통 버그 수정, 계약 변경 반영, 배포) | Git·구조를 가장 먼저 익힐 사람 |
-| **B** | P1 캘린더 + P2 프롬프트 실험실 | 중상 + 소 | 달력 UI + 2단계 AI 대화 흐름, 프롬프트 품질 관리 | 화면 구성과 AI 출력 다듬기를 좋아하는 사람 |
-| **C** | P3 체크리스트 + P4 알림 | 중상 + 소 | 데이터 규칙이 가장 많음(트랜잭션, 일정 연기, 경험치) + 알림함 | 로직을 꼼꼼히 보는 사람 |
-| **D** | P5 환경 분석 + P6 월간 리포트 | 중 + 중 | 카메라 API + 통계 집계 | 브라우저 API·데이터 집계에 관심 있는 사람 |
-
-* B·C·D는 서로 관련 있는 페이지끼리 묶었습니다(P1↔P2는 진단 프롬프트, P3↔P4는 체크리스트 알림, P5↔P6는 환경 기록·통계).
-* 공통 단계 동안 B·C·D는 A의 PR을 **리뷰하며 공통 함수 형식을 익히고**, 명세서·화면 스케치·프롬프트 샘플 입력을 준비합니다.
-
-## 각 페이지를 혼자 테스트할 수 있는 이유
-
-각 페이지는 **메인 화면 + 공통 인터페이스만 있으면** 다른 페이지 없이 동작하도록 설계했습니다.
-
-1. **뼈대(stub):** 여러 페이지가 서로 부르는 함수는 C5에서 최종 이름·형식 그대로 단순하게 동작하는 뼈대로 먼저 만듭니다. 각 담당자는 자기 뼈대 파일의 **안쪽만** 완성본으로 바꿉니다.
-
-   | 뼈대 파일 | 누가 완성 | 완성 전 동작 | 부르는 곳 |
-   | :--- | :--- | :--- | :--- |
-   | `ui/diagnosis-flow.js` | B (P1) | 사진만 기록 | 캘린더, 체크리스트 |
-   | `services/checklists.js` | C (P3) | 기본 루틴으로 체크리스트 생성, 완료는 안 됨 | 메인, 시작 작업, 알림 |
-   | `services/notifications.js` | C (P4) | 아무것도 안 함(뱃지 0) | 시작 작업 |
-   | `services/reports.js` | D (P6) | 빈 결과 | 시작 작업, 알림 |
-
-2. **AI·날씨 mock:** 기본값 `mock` 모드에서는 실제 AI 없이 그럴듯한 가짜 응답이 나옵니다. `#/dev`에서 각자 브라우저에만 적용되는 mock/real 전환 스위치가 있어서 파일을 고치지 않아도 됩니다.
-3. **`#/dev` 테스트 버튼:** 공통 버튼(물주기 예정일 바꾸기, 오늘 체크리스트 지우기 등)과 페이지별 구역(`[P1]`~`[P6]`)이 있습니다.
-   * 예) P3의 [사진으로 확인] 버튼은 P1이 머지되기 전에는 사진만 기록됨 → 정상
-   * 예) P6의 리포트는 체크리스트 완료 기능 대신 [지난달 샘플 기록 만들기]로 시험
-   * 예) P4의 리포트 알림은 [테스트 알림 만들기]로 시험
-
-## 실행 · 실제 AI(real) 모드 · 테스트할 때 알아 둘 것
-
-### 앱 실행
 ```powershell
-# 프로젝트 맨 위 폴더에서 (public 폴더를 열어야 함 — 그냥 열면 GET / 404)
+# 프로젝트 맨 위 폴더에서 (설치할 것 없음)
 python -m http.server 5500 --directory public
 ```
-* 브라우저에서 **`http://localhost:5500`** 으로 엽니다. (`127.0.0.1` 말고 `localhost` — App Check 디버그 모드가 localhost 에서만 켜짐)
-* `file://` 로 열면 ES 모듈이 동작하지 않습니다.
-* 코드를 고친 뒤 화면이 그대로면 **Ctrl+F5** (강력 새로고침).
 
-### 개발 화면 `#/dev`
-* 메뉴에 링크가 없습니다. 주소창에 **`http://localhost:5500/#/dev`** 를 직접 입력하세요. (로그인 없이 열림, 배포 시 제거)
-* "🤖 AI · 날씨 테스트 (C2)" 구역에 AI·날씨 mock/real 스위치와 AI 함수별 시험 버튼이 있습니다.
+브라우저에서 **`http://localhost:5500`** → 회원가입 → 첫 식물 등록. 기본은 **mock(가짜 AI)** 모드라 바로 끝까지 써 볼 수 있습니다.
 
-### 실제 AI(real) 모드 켜기 — 팀원마다 한 번씩
-Firebase 쪽 준비(AI Logic = Gemini Developer API, App Check = reCAPTCHA v3)와 코드 설정
-(`ai-config.js` 의 `AI_MODELS.text`, `firebase-config.js` 의 `appCheckSiteKey`)은 **이미 되어 있습니다.**
-각자 할 일은 아래 2가지입니다.
+### 설명서 (`manual/`)
 
-1. **App Check 디버그 토큰 등록** (사람마다, 브라우저마다 따로)
-   1. `http://localhost:5500` 을 열고 F12 → Console 에 찍힌 `App Check debug token: xxxxxxxx-...` 를 복사
-   2. Firebase 콘솔 → **App Check → 앱** 탭 → 웹 앱 오른쪽 **⋮ → 디버그 토큰 관리 → 디버그 토큰 추가** 에 붙여 넣기 (이름 예: `이름-크롬`)
-   3. 새로고침
-   * 시크릿 창·다른 브라우저는 토큰이 달라서 다시 등록해야 합니다.
-   * 디버그 토큰은 비밀번호처럼 다루세요. Git·채팅방에 올리지 않습니다.
-2. **`#/dev` 에서 AI 모드 스위치를 켜서 `real` 로** 바꿉니다.
-   * 내 브라우저(localStorage)에만 저장돼서 다른 사람에게 영향이 없습니다. 끄면 다시 mock.
+| 문서 | 내용 |
+| :--- | :--- |
+| [01. 로컬 실행](manual/01-local-run.md) | 서버 띄우기, localhost 로 열어야 하는 이유, 강력 새로고침 |
+| [02. Firebase 설정](manual/02-firebase-setup.md) | 프로젝트·웹 앱 `firebaseConfig`, 로그인, Firestore·보안 규칙, SDK 버전 |
+| [03. 실제 AI(real) 모드](manual/03-real-ai-mode.md) | AI Logic, App Check 사이트 키·**디버그 토큰 등록**, 모델 이름, 하루 한도, 날씨 real |
+| [04. 개발·테스트 도구](manual/04-dev-tools.md) | `#/dev` 테스트 버튼, `#/prompt-lab`, 통합 확인 순서 |
+| [05. 배포](manual/05-deploy.md) | Firebase Hosting (휴대폰 카메라 테스트·시연용 HTTPS), 배포 전 체크리스트 |
+| [06. 문제 해결](manual/06-troubleshooting.md) | 콘솔 오류별 원인과 해결 |
+| [07. 확장 가이드](manual/07-extensions.md) | Cloud Storage 사진 저장, FCM 푸시 (팀 결정 필요) |
 
-### real 모드가 진짜로 동작하는지 확인
-`#/dev` 에서 **advise** 또는 **suggestChecklist** 버튼을 누르고 아래를 봅니다.
+---
 
-| 확인할 것 | real 로 동작 중 | 아직 mock |
+## 기술 스택
+
+| 영역 | 선택 | 비고 |
 | :--- | :--- | :--- |
-| 사용량 표시 | "글 **1**/200" 처럼 올라감 | 0 그대로 |
-| 결과 문장 | 누를 때마다 달라짐 | 항상 `mocks/*.json` 과 같음 |
-| F12 콘솔 | 경고 없음 | `[ai] real 모드지만 준비가 안 됐어요 … mock 으로 동작합니다` |
+| 화면 | **순수 HTML + CSS + JS (ES 모듈)** | 프레임워크·빌드 도구·npm 패키지 없음 |
+| 화면 이동 | 해시 라우터 SPA (`#/main`) | `index.html` 하나, 화면은 JS 모듈 |
+| 서버 | **없음** — Firebase + AI API 호출만 | 모든 로직이 브라우저에서 실행 |
+| 로그인 | Firebase Authentication (이메일/비밀번호) | 아이디 → `아이디@plantcoach.example` |
+| DB | Cloud Firestore | 보안 = `firestore.rules` |
+| AI | **Firebase AI Logic** (Gemini Developer API) + App Check | 코드에 AI 키 없음. 어댑터 `js/ai/provider.js` 하나 |
+| 날씨 | **Open-Meteo** (키 없는 공개 API) | `js/core/weather.js` |
+| 사진 | 압축한 data URL 을 Firestore 에 저장 | Cloud Storage(Blaze) 미사용 |
 
-### 문제 해결
-화면에는 "AI 코치가 잠시 쉬는 중이에요" 처럼 짧게만 나옵니다. **자세한 원인은 F12 콘솔의 `[ai] 호출 실패 …` 줄**을 보세요.
+## 화면과 기능
 
-| 콘솔 내용 | 원인 | 해결 |
-| :--- | :--- | :--- |
-| App Check / 401 / unauthenticated | 디버그 토큰 미등록 | 위 1번 |
-| `API_KEY_SERVICE_BLOCKED` | 웹 API 키에 API 제한이 걸림 | A에게 알리기 (Cloud 콘솔에서 Firebase AI Logic API 허용) |
-| 403 / PERMISSION_DENIED | AI Logic 설정 문제 | A에게 알리기 |
-| 404 / model not found | 모델 이름이 바뀜·종료됨 | A에게 알리기 ([모델 목록](https://firebase.google.com/docs/ai-logic/models)) |
-| 429 | 무료 요금제 분당 한도 | 잠시 후 다시 |
-| "오늘 AI 코치 이용량을 모두 썼어요" | 브라우저별 하루 한도 | F12 → Application → Local Storage → `plantCoach.aiUsage` 삭제 |
+| 주소 | 화면 | 지침 | 핵심 |
+| :--- | :--- | :--- | :--- |
+| `#/login`, `#/signup` | 로그인 · 회원가입 | C3 | 아이디(영문 소문자·숫자 4~20) + 비밀번호(6+), 닉네임·거주지역·자택 종류 |
+| `#/main` | 메인 게임 | C6 | 캐릭터 상태(평온·기다림·관찰 필요·성장), 쓰다듬기, 레벨 바, 체크리스트 바로가기 |
+| `#/plants/new`, `#/plants/:id/edit`, `#/plants` | 식물 등록 · 수정 · 관리 | C4 | 종류 검색(없으면 AI 로 새 종류 추가), 사진 → AI 캐릭터, 정기 일정 4개 자동 생성 |
+| `#/checklist` | 오늘의 체크리스트 | P3 | AI 데일리 루틴(+5) + 예정일이 된 정기 관리(+20), **물주기 Safe-Lock** |
+| `#/calendar` | 성장 캘린더 | P1 | 사진 → AI 관찰 → 흙 상태 질문 → 오늘 할 일 2가지, 달력·타임라인 (+15, 하루 1회) |
+| `#/environment` | AI 환경 분석 | P5 | 카메라 3초 조도 추정(또는 위치 선택) + 날씨 → 적합도 점수·빛 판정·AI 조언 |
+| `#/report`, `#/report/:month` | 월간 리포트 | P6 | 지난달 통계 + AI 칭찬·다음 달 습관, 6개월 이상 분갈이 안내, 수명 마무리 안내 |
+| `#/notifications` | 알림함 | P4 | 체크리스트·리포트 알림, 🔔 안 읽은 수, (선택) 브라우저 알림 |
+| `#/profile` | 내 정보 | C3 | 닉네임·거주지역 수정, 비밀번호 변경, 로그아웃 |
+| `#/dev`, `#/prompt-lab` | 개발용 | C1~P6, P2 | 테스트 버튼, 프롬프트 실험실 — **배포 전 제거** |
+
+경험치: 데일리 +5 · 정기 관리 +20 · 하루 첫 사진 +15 · 레벨 = ⌊EXP/100⌋+1 · 성장 단계 Lv1–2 새싹 / Lv3–5 어린 모종 / Lv6+ 풍성한 식물.
+로그인 직후에는 식물마다 오늘 체크리스트와 지난달 리포트가 없으면 자동으로 만들고 알림을 남깁니다 (`js/core/startup.js`).
+
+## 폴더 구조
+
+```text
+.
+├─ README.md                 ← 지금 이 파일
+├─ 00_MAIN.md                ← 공통 약속(계약)·코딩 규칙·파일 소유권 — 모든 AI 작업에 함께 넣는 메인 지침
+├─ manual/                   ← 실행·설정 설명서 (위 표)
+├─ plant-coach-vibe-v3/      ← 바이브 코딩 지침 원본 (00_MAIN, common/C1~C6, pages/P1~P6)
+├─ docs/PROGRESS.md          ← 작업 기록 (지침마다 한 항목씩)
+├─ firestore.rules · firebase.json · .gitattributes · .gitignore
+└─ public/                   ← 브라우저가 실행하는 전부 (이 폴더를 서버로 엶)
+   ├─ index.html             ← 유일한 HTML (앱 셸)
+   ├─ css/  base.css · components.css · pages/<화면>.css
+   ├─ assets/characters/     ← 기본 캐릭터, 레벨 소품 SVG
+   ├─ data/                  ← plant-species.json(기본 식물 10종) · regions.json(시·도 좌표) · daily-tasks.json
+   ├─ prompts/               ← AI 프롬프트 템플릿 <이름>.v<번호>.txt + samples/(실험실 입력)
+   ├─ mocks/                 ← mock 모드 가짜 AI 응답
+   └─ js/
+      ├─ app.js              ← 시작점: 로그인 감시 → 라우터
+      ├─ core/               ← firebase(-config) · router · routes · store · startup · ai(-config) · weather
+      ├─ ai/                 ← provider(AI 어댑터) · prompts · normalize · json · usage
+      ├─ services/           ← ★ Firestore 접근은 여기서만 (auth, users, plants, species, schedules, checklists, …)
+      ├─ ui/                 ← layout · components(토스트·모달 등) · celebrate · diagnosis-flow
+      ├─ utils/              ← date(한국 시간) · dom(html 자동 이스케이프) · image · lux · envScore
+      └─ pages/              ← 화면 하나 = 파일 하나
+```
+
+---
+
+## 프롬프트 템플릿 관리
+
+AI 에게 보내는 글(프롬프트)은 코드에 쓰지 않고 `public/prompts/` 의 텍스트 파일로 관리합니다.
+팀 결정: **"좋은 출력이 나온 프롬프트는 템플릿으로 남긴다."**
+
+### 파일 이름과 변수
+
+* `<이름>.v<번호>.txt` — 예: `diagnose.v1.txt`, `advice.v2.txt`
+* 지금 쓰는 버전은 `public/js/core/ai-config.js` 의 `PROMPT_VERSION` (현재 `v1`)
+* `{speciesName}` 처럼 중괄호로 감싼 영문 이름은 변수이고 `js/ai/prompts.js` 가 채웁니다. 객체·배열은 JSON 글자로, 빈 값은 `정보 없음` 으로 들어갑니다.
+
+| 템플릿 | 쓰는 함수 (`core/ai.js`) | 변수 | 문구 수정 담당 |
+| :--- | :--- | :--- | :--- |
+| `character` | `generateCharacter` | speciesName | A |
+| `diagnose` | `diagnose` | speciesName | P1 (B) |
+| `advice` | `advise` | speciesName, symptoms, userAnswer, recentHistory | P1 (B) |
+| `environment` | `analyzeEnvironment` | speciesName, profile, measuredLux, weather, homeType, windowDir, heaterOrAcExposed | P5 (D) |
+| `checklist` | `suggestChecklist` | speciesName, profile, weather, latestEnvironment, dueSchedules, recentHistory | P3 (C) |
+| `monthly-report` | `writeMonthlyReport` | speciesName, daysSincePurchase, lifespan, stats, monthlyHistory, previousReport | P6 (D) |
+| `species` | `generateSpecies` | speciesName (사용자가 입력한 식물 이름) | A |
+
+개선 절차·실험실·샘플 입력(`prompts/samples/`)은 P2 (B) 담당입니다.
+
+### 개선하는 순서
+
+1. 지금 버전을 복사해 새 버전을 만듭니다. (`advice.v1.txt` → `advice.v2.txt`)
+2. **같은 입력·같은 사진·같은 반복 횟수**로 v1 과 v2 를 비교합니다. (`#/prompt-lab` 에서 버전 `v1,v2` — [사용법](manual/04-dev-tools.md#prompt-lab--프롬프트-실험실))
+3. 키·배열 모양 검사와 함께, 안내 내용의 안전성·구체성을 사람이 읽고 확인합니다. 특히 **흙이 축축하다고 답했을 때 물주기를 권하지 않는지** 봅니다.
+4. 더 좋으면 아래 기록 표에 적고 팀에 알린 뒤 채택합니다. (채택 = `PROMPT_VERSION` 올리기 — `ai-config.js` 는 공통 파일이라 A 에게 요청)
+
+위험하거나 어색한 안내가 보이면 개선점을 표에 남기고 새 버전에서 다시 확인합니다.
 
 ### 꼭 지킬 것
-* `ai-config.js` 의 **`AI_MODE` 는 main 에서 항상 `'mock'`** — real 은 `#/dev` 스위치로만 켭니다.
-* `AI_MODELS`(모델 이름)·`appCheckSiteKey` 는 공통 설정입니다. 바꿀 일이 있으면 A에게.
-* reCAPTCHA **비밀 키**, App Check **디버그 토큰**, 개인 AI 키(Vertex AI 등)는 절대 코드·Git 에 넣지 않습니다. (사이트 키·firebaseConfig 는 공개용이라 괜찮음)
-* Firebase 콘솔에서 **Firestore 의 App Check 적용(Enforce)은 켜지 마세요.** 토큰을 등록하지 않은 팀원은 mock 모드여도 데이터를 못 읽게 됩니다.
-* 무료 사용량이 있으니 real 모드는 필요할 때만 켜세요.
 
-### AI로 새 식물 종류 추가 (식물 등록 화면)
-`#/plants/new` 에서 목록에 없는 이름(2글자 이상)을 입력하면 **[🤖 'OO' AI로 새 식물 추가하기]** 버튼이 나옵니다.
-AI가 생육 정보를 만들고 → **확인 창에서 [이 정보로 추가하기]를 눌러야만** 저장됩니다.
-* 저장 위치: `users/{uid}/customSpecies/ai-<이름>` (내 계정에서만 보임). `loadSpecies`·`getSpecies`·`searchSpecies` 결과에 자동으로 섞여 나오므로 **다른 페이지는 따로 할 일이 없습니다.**
-* **mock 모드에서는 AI가 판단하지 않아서 "쓰레기통" 같은 이름도 식물로 만들어집니다.** (확인 창에 🧪 표시, `source: "MOCK"` 으로 저장) 식물 판정을 시험하려면 real 모드로 하세요.
-* real 모드 확인 예: "쓰레기통" → "식물 이름으로 찾지 못했어요", "대마" → AI 호출 없이 안내, "아레카야자" → 확인 창에 🤖 표시
-* 테스트로 만든 종류는 수정·삭제 화면이 아직 없습니다. Firebase 콘솔 → Firestore → `users/{내 uid}/customSpecies` 에서 직접 지우세요. (그 종류로 등록한 식물은 "내 식물 관리"에서 삭제)
+* 담당자는 **문구(wording)** 는 자유롭게 바꿀 수 있지만, 응답 JSON 의 **키 이름과 모양(`00_MAIN.md` §5.4)은 절대 바꾸지 않습니다.** 바뀌면 화면이 깨집니다.
+* 겁주거나 죄책감을 주는 표현(죽음, 시듦, 실패, 경고, 벌점 등)은 쓰지 않습니다.
+* 체크리스트 프롬프트에는 물주기·비료·분갈이·잎 닦기를 넣지 않습니다. (과습 방지 — 정기 관리는 일정에서만. 코드도 한 번 더 걸러 냄)
 
-## 진행 순서
+### 기록 표
 
-### 0. 시작 전에 (한 번만, A가 진행하고 모두 초대)
-1. 저장소를 만들고 `docs/SPEC.md`에 명세서 v2를, `docs/vibe/`에 이 폴더를 그대로 넣습니다.
-2. [Firebase 콘솔](https://console.firebase.google.com)에서 프로젝트를 **하나** 만들고 4명 모두 초대합니다.
-   * Authentication → 이메일/비밀번호 사용 설정
-   * Firestore Database 만들기 (위치: `asia-northeast3`(서울) 권장)
-   * **AI Services → AI Logic → 시작하기 → Gemini Developer API** 선택 (무료 Spark 요금제에서 사용 가능)
-   * 설정 과정에서 **App Check**가 함께 켜집니다. reCAPTCHA 사이트 키를 만들어 두고, `localhost` 테스트용 **디버그 토큰**은 각자 브라우저 콘솔에 찍힌 값을 App Check → 디버그 토큰 관리에 등록합니다(C1에서 안내).
-   * 프로젝트 설정 → 웹 앱 추가 → `firebaseConfig` 값 복사 (C1에서 사용)
-3. 4명 모두 **VS Code + Live Server 확장**(또는 Python)을 준비합니다. Node.js 설치는 필요 없습니다.
-   * 휴대폰 카메라 테스트·시연처럼 HTTPS가 필요할 때만 Firebase Hosting으로 배포합니다(Firebase CLI 필요, A가 담당).
+| 날짜 | 템플릿 | 버전 | 바꾼 점 | 좋았던 출력 예시(요약) | 채택 여부 |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| 2026-11-12 | 전체 | v1 | 최초 작성 (C2) | — | 채택 |
+| 2026-11-17 | advice | v2 (후보) | 젖은 흙일 때 물주기 금지, 두 행동 가이드와 짧은 상태 태그를 분명히 함 | mock 응답은 고정이므로 real 모드 비교 전 | 미채택 · 검토 중 |
+| 2026-11-18 | species | v1 | 최초 작성 (AI 식물 종류 추가) | — | 채택 |
 
-> Cloud Storage는 종량제(Blaze) 요금제가 있어야 써서 기본 설계에서 뺐습니다. 사진은 압축해서 Firestore에 저장합니다.
-> 이미지 생성(데포르메 캐릭터) 모델이 무료 요금제에서 안 되면 캐릭터만 mock SVG로 두면 됩니다(C2에서 AI가 먼저 물어봄).
+---
 
-### 1단계 — 공통 (A 혼자)
+## 팀 협업 방식
 
-| 순서 | 지침 | 비고 |
+기술개발 명세서 v2 를 바탕으로 AI 코딩 도구에 넣을 지침을 **공통 6개 + 페이지 6개**로 나눴습니다 (`plant-coach-vibe-v3/`).
+공통(C1~C6)을 팀원 A 가 먼저 만들어 **공통 인터페이스를 동결**한 뒤, 페이지(P1~P6)를 B·C·D 가 2개씩 동시에 만들었습니다.
+지침 파일은 토큰을 줄이려고 영어로 썼고, 화면 문구와 프롬프트 본문은 한국어입니다.
+
+| 팀원 | 맡은 지침 | 특징 |
 | :--- | :--- | :--- |
-| ① | C1 셸 | |
-| ② | C2 AI·날씨 | mock 먼저, 콘솔 설정이 끝났으면 real까지 |
-| ③ | C3 인증 | C2와 순서를 바꿔도 됨 |
-| ④ | C4 식물 등록 | |
-| ⑤ | C5 공유 서비스·뼈대 | 함수 형식을 B·C·D가 PR에서 꼭 같이 확인 |
-| ⑥ | C6 메인 게임 | 마지막에 **공통 통합 확인**(가입 → 식물 등록 → 메인) |
+| **A (공통)** | C1 셸 · C2 AI·날씨 · C3 인증 · C4 식물 등록 · C5 공유 서비스 · C6 메인 게임 | 동결 후 **통합 담당** (PR 리뷰, 공통 버그 수정, 계약 변경 반영, 배포) |
+| **B** | P1 성장 캘린더 + P2 프롬프트 실험실 | 2단계 AI 대화 흐름, 프롬프트 품질 관리 |
+| **C** | P3 체크리스트 + P4 알림 | 트랜잭션·일정 연기·경험치 규칙, 알림함 |
+| **D** | P5 환경 분석 + P6 월간 리포트 | 카메라 API, 통계 집계 |
 
-지침 하나가 끝날 때마다 PR → (B·C·D 중 1명 이상) 리뷰 → main에 머지합니다. C6이 머지되면 `docs/PROGRESS.md`에 **"공통 완료·동결"** 을 적고 2단계로 넘어갑니다.
+### 각 페이지를 혼자 테스트할 수 있었던 이유
 
-### 2단계 — 페이지 (B·C·D 동시에)
-1. 각자 main에서 자기 브랜치를 만듭니다: `feat/p1-calendar`, `feat/p3-checklist`, `feat/p5-environment` 등 (같은 사람의 두 페이지는 한 브랜치로 해도 됩니다).
-2. **Firebase는 같은 프로젝트를 쓰되, 각자 테스트용 계정을 따로** 만드세요. 보안 규칙상 계정별로 데이터가 분리돼서 서로 테스트를 망가뜨리지 않습니다.
-3. 기본은 `mock` 모드입니다. 실제 AI는 `#/dev`의 스위치로 각자 켜 봅니다(무료 사용량과 하루 호출 한도가 있으니 필요할 때만).
-4. 끝나면 PR → **다른 담당자 1명 이상 리뷰** → main에 머지. 리뷰할 때는 공통 파일을 건드리지 않았는지(`git diff main --stat`)를 꼭 확인합니다. 허용된 파일은 `00_MAIN.md` 9.3절 표에 있습니다.
-5. 공통 파일에 버그가 있으면 직접 고치지 말고 A에게 알립니다. A가 main에서 고치면 각자 `git merge main`으로 받아 옵니다.
+* **뼈대(stub)** — 여러 페이지가 서로 부르는 함수(`ui/diagnosis-flow.js`, `services/checklists.js`, `services/notifications.js`, `services/reports.js`)를 C5 에서 최종 이름·형식 그대로 먼저 만들고, 각 담당자가 **안쪽만** 완성본으로 바꿨습니다. 지금은 모두 완성본입니다.
+* **AI·날씨 mock** — 실제 AI 없이 그럴듯한 가짜 응답. `#/dev` 스위치로 각자 브라우저에서만 real 전환.
+* **`#/dev` 테스트 버튼** — 공통 버튼 + 페이지별 구역(`[P1]`~`[P6]`).
 
-### 3단계 — 통합 확인 (4명 함께)
-모든 페이지를 머지한 뒤 한 계정으로 처음부터 끝까지 진행해 봅니다.
-1. 회원가입 → 첫 식물 등록(사진 → 캐릭터) → 메인 화면
-2. AI 환경 분석(조도 측정 → 점수 → 조언)
-3. 성장 캘린더 사진 진단 → 관찰 필요(ALERT, 돋보기) 확인
-4. 체크리스트: 물주기 Safe-Lock — [아직 축축해요] → 2일 연기 / [말라 있어요] → +20 EXP, 레벨업
-5. 체크리스트에서 [사진으로 확인] → 이제 질문·처방까지 진행되는지 (P1 + P3 연결)
-6. 로그인 → 체크리스트 알림 → 알림 눌러 체크리스트로 이동 (P3 + P4 연결)
-7. `#/dev`에서 지난달 샘플 기록 → 다시 로그인 → 리포트 알림 → 리포트 열람 (P4 + P6 연결)
-8. `#/dev`에서 AI·날씨를 real로 바꿔 2~7을 한 번 더
+### 규칙 요약 (자세히는 [`00_MAIN.md`](00_MAIN.md))
 
-## AI에게 붙여 넣을 문장
+* Firestore 는 `services/` 에서만, AI·날씨는 `core/ai.js`·`core/weather.js` 로만 부릅니다.
+* 사용자 입력은 `html` 템플릿(`utils/dom.js`)으로 넣어 자동 이스케이프합니다. 브라우저 `alert/confirm/prompt` 는 쓰지 않습니다.
+* "오늘"은 항상 한국 시간 `today()` — `new Date().toISOString().slice(0, 10)` 금지 (오전 9시 전엔 어제 날짜).
+* 모든 JS 파일 맨 위에 머리 주석(파일·역할·사용하는 파일·담당), 주석은 한국어.
+* 공통 파일(§9.3 표 밖)을 바꾸려면 직접 고치지 말고 팀 채널에 **"계약 변경 제안"**(무엇을·왜·영향받는 페이지) → 4명 합의 → A 가 `00_MAIN.md` 를 먼저 고치는 PR → 코드 PR 순서로 머지.
+* 브랜치를 합칠 때 충돌 난 파일은 "한쪽 선택"이 아니라 **양쪽 구역을 모두 남깁니다** (특히 `dev-ui.js`, `docs/PROGRESS.md`). 줄바꿈은 `.gitattributes` 로 LF 통일.
 
-**새로 시작할 때** (파일 이름만 자기 지침으로 바꾸세요)
+### AI 코딩 도구에 붙여 넣을 문장
+
+**새로 시작할 때** (지침 파일 이름만 바꾸세요)
 ```text
-docs/vibe/00_MAIN.md 와 docs/vibe/pages/P3_checklist.md 를 읽고 이 지침의 작업을 진행해 줘.
+00_MAIN.md 와 plant-coach-vibe-v3/pages/P3_checklist.md 를 읽고 이 지침의 작업을 진행해 줘.
 시작하기 전에 docs/PROGRESS.md 와 "Prerequisites"에 적힌 기존 파일들을 먼저 열어서 실제 함수 이름을 확인하고,
 만들 파일 목록과 순서를 알려 준 다음 시작해. 지침의 수정 허용 파일 목록 밖의 파일은 고치기 전에 나한테 물어봐.
 설명과 주석은 한국어로 해 줘.
@@ -196,13 +183,11 @@ docs/vibe/00_MAIN.md 와 docs/vibe/pages/P3_checklist.md 를 읽고 이 지침�
 
 **대화가 길어져 이어서 할 때**
 ```text
-docs/vibe/00_MAIN.md 와 docs/vibe/pages/P3_checklist.md 를 읽어 줘. 이 작업을 이어서 하는 중이야.
+00_MAIN.md 와 plant-coach-vibe-v3/pages/P3_checklist.md 를 읽어 줘. 이 작업을 이어서 하는 중이야.
 docs/PROGRESS.md 와 지금까지 만든 파일을 확인하고, "Done when" 항목 중 아직 안 된 것부터 진행해 줘.
 ```
 
-## 공통 인터페이스를 바꾸고 싶을 때
-1. 직접 고치지 말고 팀 채널에 "계약 변경 제안"으로 올립니다(무엇을, 왜, 영향받는 페이지).
-2. 4명이 합의하면 A가 `00_MAIN.md`를 먼저 고치는 PR → 공통 파일 수정 PR 순서로 main에 머지합니다.
-3. 각 브랜치는 main을 받아 옵니다(`git merge main`).
+> 루트의 `00_MAIN.md` 가 최신본입니다 (AI 식물 종류 추가 기능의 계약 `generateSpecies`·`customSpecies` 포함).
+> `plant-coach-vibe-v3/00_MAIN.md` 는 처음 배포된 지침 원본입니다.
 
 명세서의 "회의 후 확인 필요 사항"(쓰다듬기 경험치, 아이디 형식 등)이 결정되면 `00_MAIN.md` 5.6·5.9절의 값만 바꾸면 됩니다.

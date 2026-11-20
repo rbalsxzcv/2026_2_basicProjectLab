@@ -118,7 +118,7 @@
   - P1 이 머지되기 전까지 [사진으로 확인] 은 사진 기록만 (지침 §1-4 의 정상 동작)
   - 프롬프트·mock (`checklist.v1.txt` · `mocks/checklist.json`) 은 C2 값 유지 — 문구 수정 필요 시 이 브랜치에서 반영
   - **[P6 교차 계약 — P6 담당자 필수 확인]** `services/checklists.js` 의 체크리스트 항목은 `00_MAIN.md` §5.5 형태 그대로입니다.
-    - `completedAt` = 실제 완료 날짜(UTC 기준 `YYYY-MM-DD`). P6의 `waterOnTimeRate` 계산(`completedAt ≤ dueDate + 1 day`)이 가능합니다.
+    - `completedAt` = 실제 완료 날짜(한국 날짜 `today()` 기준 `YYYY-MM-DD`). P6의 `waterOnTimeRate` 계산(`completedAt ≤ dueDate + 1 day`)이 가능합니다.
     - `postponed` 항목은 **절대 `isCompleted`와 동시에 true가 될 수 없습니다**(완료 로직이 미루기 분기를 먼저 return). P6의 분모에서 미루기 제외 규칙과 모순 없습니다.
     - `summarize()`는 미루기 항목을 `{total, done, remaining, percent}` 에서 제외합니다. 메인 카드와 P6의 `routineRate` 둘 다 동일 기준으로 동작합니다.
     - 미루기 후 다음 날 `schedules/WATER.dueDate` = 오늘+2 (postponeSchedule). P6는 `schedules` 에서도 정기 관리 날짜를 읽을 수 있습니다.
@@ -212,10 +212,10 @@
 - 정리할 것: 테스트로 만든 `users/{uid}/customSpecies` 문서(예: ai-쓰레기통)와 그 종류로 등록한 식물은 콘솔/내 식물 관리에서 삭제
 
 ## [설정] 실제 AI(real) 모드 준비 (2026-11-18, 담당: A)
-- 수정한 파일: `public/js/core/ai-config.js` (`AI_MODELS.text = 'gemini-3.8-flash'`, `AI_MODE` 는 'mock' 유지),
+- 수정한 파일: `public/js/core/ai-config.js` (`AI_MODELS.text` 설정 — 현재 값 `'gemini-3.5-flash-lite'`, `AI_MODE` 는 'mock' 유지),
   `public/js/core/firebase-config.js` (`appCheckSiteKey` — reCAPTCHA v3 공개 사이트 키), `README.md` (실행·real 모드·테스트 안내)
 - Firebase 콘솔: AI Logic(Gemini Developer API) 시작, App Check(reCAPTCHA v3) 등록
-- 동작 확인 방법: README "실제 AI(real) 모드 켜기" 순서대로 디버그 토큰 등록 → #/dev 에서 real → advise 버튼 → 사용량 증가 확인
+- 동작 확인 방법: `manual/03-real-ai-mode.md` 순서대로 디버그 토큰 등록 → #/dev 에서 real → advise 버튼 → 사용량 증가 확인
 - 남은 문제 / 알릴 것: 팀원은 각자 디버그 토큰 등록 필요. Firestore App Check 적용(Enforce)은 아직 끔
 
 
@@ -241,6 +241,42 @@
     환경 분석(카메라 없음 → 위치 선택, 저장) → 월간 리포트(샘플·생성·다시 열기) → 알림(생성·뱃지·탭 이동·모두 읽음) →
     로그인 직후 자동 작업(체크리스트·알림) → 내 정보 수정 → AI 식물 종류 추가 → 식물 수정·삭제 → 로그아웃·로그인
 - 남은 문제 / 알릴 것:
-  - 실제 Firebase(규칙·App Check)와 real AI 모드는 콘솔에서 직접 확인 필요. `AI_MODELS.vision`·`image` 는 비어 있어 사진 진단·캐릭터는 real 모드에서도 mock 으로 동작
+  - 실제 Firebase(규칙·App Check)와 real AI 모드는 콘솔에서 직접 확인 필요. `AI_MODELS.vision` 이 비어 있으면 사진 진단은 text 모델로 사진을 보내고, `image` 가 비어 있어 캐릭터는 real 모드에서도 mock SVG
   - 휴대폰 카메라 조도 측정은 HTTPS(Firebase Hosting) 에서 확인 필요
   - 앞으로 브랜치를 main 에 합칠 때: 충돌 난 파일은 "한쪽 선택"이 아니라 양쪽 구역을 모두 남기기 (특히 dev-ui.js · PROGRESS.md)
+
+## [정리] 지침 대조 검토 · 버그 수정 · README 통합 · 설명서 분리 (2026-11-20, 브랜치: integration)
+- 문서
+  - README 5개(루트, `plant-coach-vibe-v3/`, `pages/p1_calendar/`, `pages/p2_prompt-lab/`, `public/prompts/`)를 루트 `README.md` 하나로 합침
+    (프롬프트 템플릿 규칙·기록 표는 README "프롬프트 템플릿 관리" 절로 이동, 빈 `pages/` 폴더 삭제)
+  - 코드 주석에 흩어져 있던 실행·설정 안내를 `manual/01~07` 로 옮기고, 코드에는 한 줄 안내만 남김
+    (`firebase-config.js`, `firebase.js`, `ai-config.js`, `images.js`, `firestore.rules`, `app.js` 설정 안내 카드)
+  - `00_MAIN.md` §4·§9.3 의 `prompts/README.md` 참조를 README 로 변경, `manual/`·`services/dev-tools.js` 추가
+- 버그 수정
+  - `pages/checklist.js` — 식물 칩을 바꿀 때 그 식물의 오늘 체크리스트가 아직 없으면 화면이 이전 식물에 머물고,
+    완료 버튼이 다른 식물 id 로 호출되던 문제 → `ensureTodayChecklist` 로 만들고 그림 (늦게 온 결과는 무시)
+  - `services/reports.js` — `ensureLastMonthReports` 에서 식물 하나의 리포트 생성이 실패하면 나머지 식물도 모두 멈추던 문제 → 식물별 try/catch
+  - `ui/diagnosis-flow.js` — 진단 중 다른 화면으로 이동하면 ESC 처리로 모달이 닫힌 것으로 판단해 새 화면 위에
+    "진단 없이 사진만 기록할까요?" 창이 뜨던 문제 → 이동하면 저장 없이 종료, 로딩도 닫음.
+    캘린더처럼 사진을 넘겨받은 경우에도 P1 §3.3 2단계 미리보기("이 사진으로 기록할까요?")를 보여 줌. 저장하는 `diagnosis` 를 §5.5 모양으로 정리
+  - `pages/environment.js` — 자택 종류를 "선택 안 함"으로 둔 사용자도 '아파트'로 표시·AI 전달되던 문제, [분석하기] 연속 클릭 시 기록이 두 번 저장되던 문제
+  - `utils/envScore.js` — P5 §3.2 "아주 어두우면 '창가 쪽으로 옮겨 주세요'" 규칙 반영 (`ruleBasedTips` 에 선택 인자 `lux` 추가, 기존 호출 호환)
+  - `css/components.css` — 모달 문구의 줄바꿈(`
+`)이 사라져 진단 질문·"팁
+
+다 했나요?" 가 한 줄로 붙던 문제 (`.modal-body p { white-space: pre-line }`)
+  - `pages/calendar.js` — 아직 오지 않은 달(`?month=`)도 열리던 문제, 등록 전 날짜 흐림 기준을 등록일(createdAt)로, 금지 규칙(`toISOString().slice`) 제거
+  - `pages/prompt-lab.js` — 다시 그릴 때 반복 횟수·입력 샘플 선택이 처음 값으로 돌아가던 문제. `species` 템플릿과 샘플(`prompts/samples/species-input.json`) 추가
+  - `pages/profile.js` — 가입 때 실패한 회원정보를 다시 저장해도 식물 등록 화면으로 안내되지 않던 문제
+- 규칙 정리
+  - `pages/dev-ui.js` [P1]·[P6] 의 Firestore 직접 호출을 `services/dev-tools.js` 로 이동 (00_MAIN 규칙 3), 병렬 작업용 동적 import 를 일반 import 로
+  - 머리 주석이 없던 `calendar.js`, `prompt-lab.js`, `diagnosis-flow.js`, `diagnosis.js` 에 머리 주석 추가, 한 줄에 몰린 코드 풀어 씀
+  - 뼈대(stub) 시절 주석("P1 완성 전엔…", "C5 뼈대 그대로", "공유 import 줄을 건드리지 않으려고…") 정리
+- 동작 확인: 헤드리스 Chrome + 메모리 가짜 Firestore(import map 으로 Firebase CDN 대체, 실제 프로젝트에는 쓰지 않음)
+  - 모든 JS 모듈 53개 로드(문법·import 이름) 통과
+  - 체크리스트 생성 1회·Safe-Lock(미확인 시 거부 / 축축함 → 2일 연기·무경험치)·데일리 +5, 샘플 월 통계(실천율 74% 등 손계산 일치)·리포트 중복 방지,
+    식물 전환, 환경 분석 중복 저장 방지, 사진 진단(미리보기 → 질문 → 결과 → +15)·이동 시 취소, 실험실 species, 모든 화면 그리기 — 29개 통과
+- 남은 문제 / 알릴 것
+  - 실제 Firebase·real AI·휴대폰 카메라는 여전히 콘솔·HTTPS 환경에서 직접 확인 필요
+  - `plant-coach-vibe-v3/` 지침 원본은 수정하지 않음 (P2 지침의 `prompts/README.md` 는 이제 루트 README 의 해당 절을 뜻함)
+

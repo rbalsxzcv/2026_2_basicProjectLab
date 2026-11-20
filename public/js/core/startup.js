@@ -5,7 +5,7 @@
  *       - runBackgroundTasks: 화면을 그린 "뒤에" 조용히 하는 일 (체크리스트, 월간 리포트, 알림 뱃지)
  * 사용하는 파일: services/users.js, services/plants.js, services/checklists.js,
  *               services/reports.js, services/notifications.js, ui/layout.js, ui/components.js
- * 담당: C1 (뼈대) → C3·C4·C5 (채움). ★ 공통 완료 후 동결 — 페이지 담당은 이 파일을 고치지 않습니다.
+ * 담당: C1 · C3 · C4 · C5. ★ 공통 동결 파일 — 동작을 바꾸려면 각 서비스 함수의 안쪽을 고칩니다.
  */
 
 import { store } from './store.js';
@@ -48,7 +48,6 @@ export async function runBlockingTasks(user) {
 // 화면을 띄운 뒤 뒤에서 조용히 할 작업 (기다리지 않음)
 export function runBackgroundTasks(user) {
   // [C5] 오늘의 체크리스트 만들기 + 새로 만들었으면 알림 (식물마다, 기다리지 않음)
-  //      P3는 ensureTodayChecklist 안쪽만, P4는 notifyChecklistCreated 안쪽만 바꾼다.
   try {
     for (const plant of store.get('plants') ?? []) {
       ensureTodayChecklist(plant)
@@ -59,7 +58,7 @@ export function runBackgroundTasks(user) {
     console.warn('[C5] 체크리스트 작업 시작 실패', e);
   }
 
-  // [C5] 지난달 월간 리포트 + 새로 만들었으면 알림 — P6가 ensureLastMonthReports 안쪽을 완성
+  // [C5] 지난달 월간 리포트 + 새로 만들었으면 알림
   try {
     ensureLastMonthReports(store.get('plants') ?? [])
       .then(async (results) => {

@@ -80,16 +80,21 @@ export function calcMatchScore({ lux, weather, heaterOrAcExposed, windowDir, spe
   };
 }
 
+// 권장 최소 밝기의 30% 미만이면 "아주 어두움"으로 봄
+const VERY_LOW_RATIO = 0.3;
+
 /**
  * AI 호출이 실패했을 때 보여 줄 규칙 기반 기본 조언 ({ goodPoint, actions })
+ * lux 는 선택값 — 있으면 "아주 어두운지"를 더 정확히 판단합니다.
  */
-export function ruleBasedTips({ lightLevel: level, weather, heaterOrAcExposed, windowDir, species }) {
+export function ruleBasedTips({ lux = null, lightLevel: level, weather, heaterOrAcExposed, windowDir, species }) {
   const actions = [];
   const luxMin = species?.luxMin ?? 500;
   const humidityMin = species?.humidityMin ?? 40;
 
   if (level === 'LOW') {
-    if (windowDir === '북향' || windowDir === '창문 없음') {
+    const veryLow = typeof lux === 'number' && lux < luxMin * VERY_LOW_RATIO;
+    if (veryLow || windowDir === '북향' || windowDir === '창문 없음') {
       actions.push('창가 쪽으로 옮겨 주세요.');
     } else {
       actions.push('창가에서 50cm 안쪽으로 자리를 옮겨주세요.');

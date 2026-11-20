@@ -1,26 +1,33 @@
 /**
- * 사진 진단의 AI 호출과 기록 요약을 담당합니다. Firestore 쓰기는 화면 흐름에서 합니다.
+ * 파일: public/js/services/diagnosis.js
+ * 역할: 사진 진단의 AI 호출(관찰 → 처방)과 aiHistory 에 남길 요약 만들기 (화면 없음)
+ * 사용하는 파일: core/ai.js, services/aiHistory.js
+ * 담당: P1
+ *
+ * ※ Firestore 저장은 ui/diagnosis-flow.js 가 photos · aiHistory 서비스를 불러서 합니다.
  */
+
 import { diagnose, advise } from '../core/ai.js';
 import { getRecentHistory } from './aiHistory.js';
-import { db, collection, getDocs, query, where, deleteDoc } from '../core/firebase.js';
-import { store } from '../core/store.js';
 
+const HISTORY_WAIT_MS = 5000; // 최근 기록은 보조 정보라 오래 기다리지 않음
+
+// 1단계: 사진 → { symptoms, severity, question, options }
 export async function startDiagnosis({ imageDataUrl, speciesName }) {
   return diagnose({ imageBase64: imageDataUrl, speciesName });
 }
 
+// 2단계: 관찰 + 사용자가 확인한 흙 상태 + 최근 기록 → { advice, summaryTag }
 export async function finishDiagnosis({ plantId, speciesName, first, userAnswer }) {
-  // Firestore 읽기가 오프라인/권한/초기화 문제로 끝나지 않으면
-  // P1의 로딩 오버레이가 영원히 남는다. 최근 기록은 보조 정보이므로
-  // 짧게 기다린 뒤 비워진 기록으로 진단을 계속한다.
+  // 최근 기록 읽기가 (오프라인 등으로) 끝나지 않아도 로딩 화면이 멈추지 않게, 잠시 기다린 뒤 빈 기록으로 진행
   const recentHistory = await Promise.race([
     getRecentHistory(plantId, { n: 5 }).catch(() => []),
-    new Promise((resolve) => setTimeout(() => resolve([]), 5000)),
+    new Promise((resolve) => setTimeout(() => resolve([]), HISTORY_WAIT_MS)),
   ]);
   return advise({ speciesName, symptoms: first.symptoms, userAnswer, recentHistory });
 }
 
+// aiHistory 에 남길 짧은 요약 (사진 없음)
 export function buildHistorySummary({ first, userAnswer, result }) {
   return {
     symptoms: first.symptoms,
@@ -29,14 +36,4 @@ export function buildHistorySummary({ first, userAnswer, result }) {
     summaryTag: result.summaryTag,
     advice: result.advice.join(' / '),
   };
-}
-
-// 개발 화면에서만 오늘 사진 기록을 비워 하루 1회 경험치 흐름을 다시 확인합니다.
-export async function deleteTodaysPhotos(plantId, date) {
-  const uid = store.get('user')?.uid;
-  if (!uid) throw new Error('로그인이 필요해요');
-  const photos = collection(db, 'users', uid, 'plants', plantId, 'photos');
-  const snapshot = await getDocs(query(photos, where('date', '==', date)));
-  await Promise.all(snapshot.docs.map((photo) => deleteDoc(photo.ref)));
-  return snapshot.size;
 }

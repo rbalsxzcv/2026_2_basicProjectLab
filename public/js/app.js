@@ -42,7 +42,7 @@ function renderSetupGuide(container) {
         <li>Firestore 를 만들고 <code>firestore.rules</code> 내용을 규칙 탭에 게시해요.</li>
         <li>저장하고 이 화면을 새로고침해요.</li>
       </ol>
-      <p class="card-sub">자세한 방법은 각 파일 맨 위의 주석에 적혀 있어요.</p>
+      <p class="card-sub">자세한 방법은 저장소의 <code>manual/02-firebase-setup.md</code> 에 있어요.</p>
       <a class="btn btn-secondary" href="#/dev">Firebase 없이 공용 UI 시험해 보기 (#/dev)</a>
     </section>
   `;
