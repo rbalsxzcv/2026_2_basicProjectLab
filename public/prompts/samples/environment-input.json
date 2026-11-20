@@ -1,0 +1,4 @@
+[
+  { "label": "겨울 · 북향", "input": { "speciesName": "몬스테라", "profile": { "luxRange": "1000~10000 lux", "tempRange": "18~27℃", "humidityRange": "50~70%" }, "measuredLux": 450, "weather": { "tempC": 4, "humidity": 35, "precipitation": false }, "homeType": "아파트", "windowDir": "북향", "heaterOrAcExposed": true } },
+  { "label": "가을 · 남향", "input": { "speciesName": "스투키", "profile": { "luxRange": "500~5000 lux", "tempRange": "15~30℃", "humidityRange": "30~60%" }, "measuredLux": 3200, "weather": { "tempC": 18, "humidity": 52, "precipitation": false }, "homeType": "빌라", "windowDir": "남향", "heaterOrAcExposed": false } }
+]

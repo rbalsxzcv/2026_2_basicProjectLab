@@ -1,0 +1,4 @@
+[
+  { "label": "첫 달", "input": { "speciesName": "몬스테라", "daysSincePurchase": 30, "lifespan": { "type": "PERENNIAL", "endDate": null }, "stats": { "routineRate": 72, "ventilationCount": 18, "waterOnTimeRate": 80, "photoCount": 4 }, "monthlyHistory": [], "previousReport": null } },
+  { "label": "기록이 쌓인 달", "input": { "speciesName": "바질", "daysSincePurchase": 90, "lifespan": { "type": "ANNUAL", "endDate": "2027-03-01" }, "stats": { "routineRate": 55, "ventilationCount": 9, "waterOnTimeRate": 70, "photoCount": 2 }, "monthlyHistory": [{ "type": "PHOTO_DIAGNOSIS", "summaryTag": "건강해요", "date": "2026-11-12" }], "previousReport": { "praise": "꾸준히 관찰했어요." } } }
+]

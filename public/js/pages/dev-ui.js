@@ -387,12 +387,22 @@ function renderGameSection(root) {
 
 // ===== [P1] 성장 캘린더 테스트 — P1 담당자만 수정 =====
 function renderP1Section(root) {
-  root.innerHTML = html`<h2 class="dev-title">📅 [P1] 성장 캘린더</h2><p class="muted">P1 담당자가 테스트 버튼을 추가해요.</p>`;
+  root.innerHTML = html`<h2 class="dev-title">📅 [P1] 성장 캘린더</h2><p class="muted">사진 진단 mock 은 diagnose-1 / diagnose-2 중 하나를 무작위로 사용해요.</p><div class="row dev-wrap"><button type="button" class="btn btn-secondary btn-sm" data-p1-delete>오늘 사진 기록 지우기</button><a class="btn btn-primary btn-sm" href="#/calendar">성장 캘린더 열기</a></div>`;
+  on(root, 'click', '[data-p1-delete]', async () => {
+    const plant = requirePlant();
+    if (!plant) return;
+    if (!(await confirmModal('오늘 사진 기록을 모두 지울까요? 하루 사진 경험치 테스트를 다시 할 수 있어요.'))) return;
+    try {
+      const { deleteTodaysPhotos } = await import('../services/diagnosis.js');
+      const count = await deleteTodaysPhotos(plant.id, today());
+      toast(count ? `오늘 사진 ${count}장을 지웠어요.` : '오늘 사진 기록이 없어요.', 'success');
+    } catch (error) { toast(error.message || '사진 기록을 지우지 못했어요.', 'error'); }
+  });
 }
 
 // ===== [P2] 프롬프트 실험실 테스트 — P2 담당자만 수정 =====
 function renderP2Section(root) {
-  root.innerHTML = html`<h2 class="dev-title">🧫 [P2] 프롬프트 실험실</h2><p class="muted">P2 담당자가 테스트 버튼을 추가해요.</p>`;
+  root.innerHTML = html`<h2 class="dev-title">🧫 [P2] 프롬프트 실험실</h2><p class="muted">템플릿 버전을 비교하고 응답 JSON 모양을 확인해요.</p><a class="btn btn-primary btn-sm" href="#/prompt-lab">프롬프트 실험실 열기</a>`;
 }
 
 // ===== [P3] 체크리스트 테스트 — P3 담당자만 수정 =====

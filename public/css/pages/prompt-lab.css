@@ -1,0 +1,25 @@
+.prompt-lab { padding-bottom: 32px; }
+.prompt-lab-note { padding: 12px 14px; border-radius: 12px; background: #fff4e8; color: #77562e; font-size: 13px; }
+.prompt-lab-status { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; padding: 12px 14px; border-radius: 14px; background: #edf5ea; color: #466343; font-size: 13px; }
+.prompt-lab-status strong { color: #2f6036; text-transform: uppercase; }
+.prompt-lab-form label { display: grid; gap: 7px; color: #384a39; font-weight: 650; }
+.prompt-lab-form input, .prompt-lab-form select, .prompt-lab-form textarea { width: 100%; border: 1px solid #d5dfd2; border-radius: 10px; padding: 10px 12px; background: #fff; color: #2e3830; font: inherit; }
+.prompt-lab-form textarea, .prompt-lab-result pre { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 12px; line-height: 1.55; }
+.prompt-lab-hint { color: #788273; font-size: 12px; font-weight: 400; }
+.prompt-lab-preview { display: block; width: min(100%, 260px); max-height: 220px; object-fit: contain; border-radius: 12px; background: #f3f5f1; }
+.prompt-lab-actions { flex-wrap: wrap; }
+.prompt-lab-results { display: grid; gap: 14px; }
+.prompt-lab-results.is-compare { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+.prompt-lab-version { display: grid; gap: 10px; min-width: 0; }
+.prompt-lab-version h2 { margin: 0; color: #3d6640; font-size: 17px; }
+.prompt-lab-result { display: grid; gap: 10px; min-width: 0; padding: 14px; border: 1px solid #e1e8de; border-radius: 14px; background: #fff; }
+.prompt-lab-result header { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.prompt-lab-badge { padding: 4px 9px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+.prompt-lab-badge.is-pass { background: #e6f3e2; color: #356b3a; }
+.prompt-lab-badge.is-issue { background: #fff0df; color: #855a30; }
+.prompt-lab-result pre { max-height: 360px; overflow: auto; margin: 0; padding: 10px; border-radius: 9px; background: #f5f7f4; white-space: pre-wrap; overflow-wrap: anywhere; }
+.prompt-lab-result details summary { cursor: pointer; color: #476a48; font-size: 13px; font-weight: 650; }
+.prompt-lab-issues { margin: 0; padding: 10px 10px 10px 28px; border-radius: 9px; background: #fff4e8; color: #77562e; font-size: 13px; }
+.prompt-lab-error { margin: 0; padding: 10px; border-radius: 9px; background: #fff4e8; color: #77562e; }
+.prompt-lab-output-image { width: min(100%, 360px); margin: auto; border-radius: 12px; }
+@media (max-width: 640px) { .prompt-lab-results.is-compare { grid-template-columns: 1fr; } }

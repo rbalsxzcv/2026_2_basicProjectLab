@@ -1,0 +1,4 @@
+[
+  { "label": "오늘 물주기 예정", "input": { "speciesName": "몬스테라", "profile": { "humidityRange": "50~70%", "waterIntervalDays": 7 }, "weather": { "tempC": 12, "humidity": 35, "precipitation": false }, "latestEnvironment": null, "dueSchedules": [{ "taskType": "WATER", "dueDate": "2026-11-17" }], "recentHistory": [] } },
+  { "label": "최근 진단 있음", "input": { "speciesName": "스투키", "profile": { "humidityRange": "30~60%", "waterIntervalDays": 14 }, "weather": { "tempC": 18, "humidity": 48, "precipitation": false }, "latestEnvironment": { "measuredLux": 800 }, "dueSchedules": [], "recentHistory": [{ "type": "PHOTO_DIAGNOSIS", "summaryTag": "살펴보는 중", "date": "2026-11-15" }] } }
+]

@@ -1,0 +1,4 @@
+[
+  { "label": "몬스테라 · 겨울", "input": { "speciesName": "몬스테라" } },
+  { "label": "스투키 · 실내", "input": { "speciesName": "스투키" } }
+]

@@ -87,3 +87,17 @@
   - **공통 통합 확인(가입 → 식물 등록 → 메인 → 로그아웃 → 다시 로그인)은 Firebase 프로젝트를 연결한 뒤 해야 함.**
     통과하면 아래 줄을 "공통 완료·동결, P1~P6 시작 가능" 으로 바꾸세요.
   - 상태: 공통 코드 작성 완료 — Firebase 연결 후 통합 확인 대기
+
+## [P1] 성장 캘린더 · 대화형 사진 진단 (2026-11-17, 담당: B)
+- 만든 파일: `public/js/services/diagnosis.js`, `public/js/pages/calendar.js`, `public/css/pages/calendar.css`
+- 완성한 파일: `public/js/ui/diagnosis-flow.js` (사진 미리보기 → 관찰 → 흙 질문 → 오늘 가이드 → 사진·AI 기록·경험치 저장)
+- 수정한 파일: `public/js/pages/dev-ui.js` ([P1] 구역에 오늘 사진 기록 초기화와 캘린더 링크 추가)
+- 동작 확인 방법: Firebase 설정 후 `#/dev` 에서 AI 모드를 mock 으로 두고 `[P1] 오늘 사진 기록 지우기` 로 일일 경험치 흐름 초기화 → `#/calendar` 에서 사진 진단과 사진만 기록을 각각 확인
+- 남은 확인: Firebase 연결 후 diagnose-1 / diagnose-2 mock, 하루 첫 사진 +15 EXP, 월 이동·날짜 선택·기록 펼치기에서 AI 미호출을 통합 확인
+
+## [P2] 프롬프트 실험실 · 템플릿 버전 비교 (2026-11-17, 담당: B)
+- 만든 파일: `public/js/pages/prompt-lab.js`, `public/css/pages/prompt-lab.css`, `public/prompts/samples/*-input.json`
+- 추가한 프롬프트: `public/prompts/advice.v2.txt` (후보 버전, 아직 채택 안 함; `PROMPT_VERSION` 은 v1 유지)
+- 수정한 파일: `public/prompts/README.md` (실험 절차·mock 한계·후보 기록), `public/js/pages/dev-ui.js` ([P2] 실험실 링크)
+- 동작 확인 방법: 로그인 후 `#/prompt-lab` 에서 템플릿·입력·버전·반복 횟수 선택 → 결과 JSON 모양 검사 및 JSON 다운로드 확인
+- 남은 확인: real 모드 비교는 Firebase AI Logic / App Check 설정 후 수행. mock 응답은 고정이므로 프롬프트 버전 간 품질 차이를 평가하지 않음
