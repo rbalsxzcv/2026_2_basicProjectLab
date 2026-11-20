@@ -1,0 +1,273 @@
+/*
+ * 파일: public/css/pages/checklist.css
+ * 역할: 오늘의 체크리스트 화면 스타일 — 진행 원, 데일리·주기적 항목 카드, 미룸 카드, 체크 애니메이션
+ * 담당: P3
+ */
+
+/* ===== 화면 레이아웃 ===== */
+.checklist-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* ===== 식물 고르기 + 날짜 ===== */
+.plant-selector {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  padding: 2px 2px var(--space-1);
+  scrollbar-width: none;
+}
+
+.plant-selector::-webkit-scrollbar {
+  display: none;
+}
+
+.selector-chip {
+  flex-shrink: 0;
+}
+
+.checklist-date {
+  font-size: 14px;
+  color: var(--color-muted);
+  text-align: center;
+}
+
+/* ===== 진행 카드 ===== */
+.progress-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  background: linear-gradient(135deg, #ffffff 0%, var(--color-primary-soft) 100%);
+}
+
+/* conic-gradient 로 된 원형 진행도 */
+.progress-ring {
+  --percent: 0;
+  position: relative;
+  width: 108px;
+  height: 108px;
+  border-radius: 50%;
+  background: conic-gradient(var(--color-primary) calc(var(--percent) * 1%), #edf0ea 0);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+/* 원 안쪽 흰 부분 (문양을 링으로 보이게) */
+.progress-ring::before {
+  content: '';
+  position: absolute;
+  inset: 10px;
+  border-radius: 50%;
+  background: var(--color-surface);
+}
+
+.progress-ring-inner {
+  position: relative;
+  z-index: 1;
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  border-radius: 50%;
+  background: var(--color-primary-soft);
+  padding: 4px;
+}
+
+.progress-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.progress-count {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--color-primary-dark);
+}
+
+.progress-note {
+  font-size: 13px;
+  color: var(--color-muted);
+}
+
+/* 모든 항목 완료했을 때의 축하 카드로 진행 카드가 바뀌어요 */
+.progress-card.is-all-done {
+  background: linear-gradient(135deg, var(--color-primary-soft) 0%, #fff6e8 100%);
+  text-align: center;
+}
+
+.all-done-text {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--color-primary-dark);
+  line-height: 1.5;
+}
+
+/* ===== 구역 제목 (EXP 배지 포함) ===== */
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.section-title .tag {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* ===== 항목 카드 ===== */
+.item-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 72px;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.item-card.is-done {
+  background: var(--color-primary-soft);
+  border-color: var(--color-primary);
+}
+
+.item-emoji {
+  font-size: 28px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.item-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.item-title {
+  font-size: 15px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+/* 주기적 관리의 한 줄 팁 */
+.item-tip {
+  font-size: 12px;
+  color: var(--color-muted);
+}
+
+/* 지났지만 차분하게 기다리는 표현 (빨강·경고색 없음) */
+.item-overdue {
+  font-size: 12px;
+  color: var(--color-muted);
+}
+
+/* 완료 버튼 (44px 원). 완료 시엔 체크 표시가 채워지는 버튼으로 유지 */
+.check-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2px solid var(--color-primary);
+  background: var(--color-surface);
+  color: transparent;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  transition: transform 0.1s ease, background-color 0.2s ease, color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.check-btn:active {
+  transform: scale(0.92);
+}
+
+.check-btn:focus-visible {
+  outline: 3px solid rgba(91, 166, 114, 0.4);
+  outline-offset: 2px;
+}
+
+/* 완료됨: 초록으로 채워지고 체크가 살짝 튐 */
+.check-btn.is-done {
+  background: var(--color-primary);
+  color: #fff;
+  animation: check-pop 0.35s ease;
+}
+
+@keyframes check-pop {
+  0% { transform: scale(0.7); }
+  60% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+/* ===== 미룸 카드 (흙이 축축해서 미룬 물주기) ===== */
+.item-card.is-postponed {
+  opacity: 0.55;
+  border-style: dashed;
+}
+
+.item-postponed {
+  font-size: 12px;
+  color: var(--color-muted);
+}
+
+/* ===== 사진으로 상태 확인하기 ===== */
+.photo-check-btn {
+  border: 1.5px dashed var(--color-primary);
+  background: var(--color-surface);
+}
+
+/* ===== 하단 월간 리포트 링크 ===== */
+.report-link {
+  display: block;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-primary-dark);
+  text-decoration: none;
+  padding: var(--space-2);
+}
+
+/* ===== 로딩 스켈레톤 ===== */
+.checklist-skeleton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  color: var(--color-muted);
+  font-size: 14px;
+}
+
+.skeleton-line {
+  width: 100%;
+  height: 72px;
+  border-radius: var(--radius);
+  background: linear-gradient(90deg, #f1f3ef 25%, #e9ece6 50%, #f1f3ef 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.3s infinite;
+}
+
+@keyframes skeleton-shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+/* 움직임 줄이기: 스켈레톤 반짝임만 끔 */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-line,
+  .check-btn.is-done {
+    animation: none !important;
+  }
+}

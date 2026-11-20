@@ -88,53 +88,42 @@
     통과하면 아래 줄을 "공통 완료·동결, P1~P6 시작 가능" 으로 바꾸세요.
   - 상태: 공통 코드 작성 완료 — Firebase 연결 후 통합 확인 대기
 
-## [추가] AI 식물 종류 추가 (2026-11-18, 담당: A)
-- 만든 파일: `public/prompts/species.v1.txt`, `public/mocks/species.json`
-- 수정한 파일 (기존 함수·변수 이름과 반환 모양은 그대로, 추가만 함):
-  - `public/js/core/ai.js` — `generateSpecies({ speciesName })` 추가 (Firebase AI Logic, text 모델)
-  - `public/js/ai/normalize.js` — `RULES.species` · `checkShape('species')` 추가 (숫자 범위·lifespanType 다듬기)
-  - `public/js/services/species.js` — `findSpeciesByName`, `addSpeciesByName` 추가.
-    AI로 만든 종류는 `users/{uid}/customSpecies/ai-xxxx` 에 저장되고 `loadSpecies`/`getSpecies`/`searchSpecies` 결과에 함께 나옴
-  - `public/js/pages/plant-register.js` — 검색어와 정확히 같은 종류가 없으면 [🤖 'OO' AI로 새 식물 추가하기] 버튼 표시
-  - `00_MAIN.md` §5.4·§5.5, `public/prompts/README.md` — 새 함수·컬렉션·템플릿 기록
-- 동작 확인 방법: `#/plants/new` → 검색칸에 목록에 없는 이름(예: 아레카야자) 입력 → [AI로 새 식물 추가하기] →
-  선택 카드에 "AI가 만들어 준 참고용 정보예요" 표시 → 등록 → Firestore `customSpecies` 1개, `plants.speciesId = 'ai-…'`, `schedules` 4개.
-  mock 모드에서는 입력한 이름 + 기본 생육값으로 만들어짐
+## [P3] 체크리스트 · Safe-Lock (2026-11-15, 담당: C)
+- 만든 파일: `public/js/pages/checklist.js`, `public/css/pages/checklist.css`
+- 수정한 파일: `public/js/services/checklists.js` (C5 뼈대 → 완성, 함수 형식 유지), `public/js/pages/dev-ui.js` ([P3] 구역만)
+- 동작 확인 방법 (Firebase 설정 후):
+  - `#/checklist` 진입 → 오늘 문서 1개만 생성 (`#/dev` [오늘 체크리스트를 AI로 다시 만들기] 로 재생성)
+  - mock 에 WATER 가 있어도 데일리 루틴엔 물주기가 없음. 물주기는 정기 관리만 (`#/dev` 공용 [물주기 예정일을 오늘로] → [오늘 체크리스트 지우기] → 진입)
+  - 데일리 +5 / 정기 +20 EXP → 메인 EXP 바에 반영, 레벨업 시 축하 모달
+  - 물주기 완료 버튼 → 흙 확인 팝업 (배경 클릭·ESC 로 닫히지 않음)
+    → [아직 축축해요]: 미완료 · 무경험치 · `schedules/WATER.dueDate` = 오늘+2, 체크리스트에 미룸 카드
+    → [말라 있어요]: 완료 · +20 EXP · `dueDate` = 오늘+간격
+  - 지나간 정기 관리: 메인에서 WAITING → 완료 후 GROWING(30분) → PEACEFUL
+  - [📷 사진으로 상태 확인하기] → `runDiagnosisFlow` (P1 머지 전엔 사진만 기록됨 — 정상)
 - 남은 문제 / 알릴 것:
-  - 다른 화면은 지금처럼 `getSpecies(plant.speciesId)` 만 쓰면 AI 종류도 그대로 동작 (추가 작업 없음)
-  - AI 생육값은 참고용 대략값. 이미 같은 이름(별칭 포함)이 있으면 AI를 부르지 않고 기존 종류를 씀
-  - `firestore.rules` 변경 불필요 (`users/{uid}/**` 규칙에 포함)
+  - P1 이 머지되기 전까지 [사진으로 확인] 은 사진 기록만 (지침 §1-4 의 정상 동작)
+  - 프롬프트·mock (`checklist.v1.txt` · `mocks/checklist.json`) 은 C2 값 유지 — 문구 수정 필요 시 이 브랜치에서 반영
+  - **[P6 교차 계약 — P6 담당자 필수 확인]** `services/checklists.js` 의 체크리스트 항목은 `00_MAIN.md` §5.5 형태 그대로입니다.
+    - `completedAt` = 실제 완료 날짜(UTC 기준 `YYYY-MM-DD`). P6의 `waterOnTimeRate` 계산(`completedAt ≤ dueDate + 1 day`)이 가능합니다.
+    - `postponed` 항목은 **절대 `isCompleted`와 동시에 true가 될 수 없습니다**(완료 로직이 미루기 분기를 먼저 return). P6의 분모에서 미루기 제외 규칙과 모순 없습니다.
+    - `summarize()`는 미루기 항목을 `{total, done, remaining, percent}` 에서 제외합니다. 메인 카드와 P6의 `routineRate` 둘 다 동일 기준으로 동작합니다.
+    - 미루기 후 다음 날 `schedules/WATER.dueDate` = 오늘+2 (postponeSchedule). P6는 `schedules` 에서도 정기 관리 날짜를 읽을 수 있습니다.
 
-## [추가] AI 식물 종류 추가 — 안전장치 보강 (2026-11-18, 담당: A)
-- 수정한 파일 (이번에 새로 추가한 기능 범위 안에서만 수정, 기존 공통 함수·변수·반환 모양은 그대로):
-  - `public/js/ai/normalize.js` (`RULES.species`) — `isPlant === true` 일 때만 통과(빠지면 거절), `rejectReason` 추가,
-    입력 글자 제한(한글·영문·숫자·띄어쓰기·- · ( ), 2~30자), 재배 제한 식물(대마·양귀비 등) 입력·출력 모두 차단,
-    이름·별칭·careTip 금지어(죽음·시듦·실패·경고 등) 검사, 물주기 최소 3일(여러해살이)/2일(그 외)
-  - `public/prompts/species.v1.txt` — 판정 기준(NOT_PLANT / NOT_GROWABLE / RESTRICTED), 입력 속 지시 무시, 애매하면 보수적으로
-  - `public/js/services/species.js` — `previewSpeciesByName`(AI 초안, 저장 안 함) · `saveSpeciesDraft`(확인 후 저장) 추가,
-    `addSpeciesByName` 은 같은 이름·같은 인자로 유지(두 함수를 이어서 부름). 문서 id = 'ai-' + 대표 이름 → 중복 저장 방지
-  - `public/js/pages/plant-register.js` — 저장 전 확인 창, 검색 결과가 없고 2글자 이상일 때만 AI 버튼 표시
-  - `public/css/pages/plant.css` — 확인 창 목록 스타일(`.species-draft`)
-  - `public/mocks/species.json`, `00_MAIN.md` §5.4·§5.5 — `rejectReason`, 새 함수 기록
-- 동작 확인 방법: `#/plants/new` → ① "몬" 입력 → 버튼 안 보임 ② 목록에 없는 이름 → 버튼 → 확인 창 → [다시 입력할게요] → Firestore 에 저장 안 됨
-  ③ 다시 → [이 정보로 추가하기] → `customSpecies/ai-<이름>` 저장 ④ "대마" → AI 호출 없이 안내 ⑤ "몬스테라{}" → 글자 안내
-- 남은 문제 / 알릴 것 (코드만으로 못 막음 → 팀 결정):
-  - mock 모드는 항상 "식물"로 판정하고 기본값으로 만듦 → 배포 시 real 모드 확인 필요. mock 으로 만든 테스트 데이터는 콘솔에서 지우기
-  - AI 생육값의 정확성 자체는 검증 불가 (참고용 표시 + 사용자 확인으로 완화). 다른 화면의 "AI 정보" 표시, 종류 수정·삭제 화면은 미구현
-  - 브라우저에서 도는 검사이므로 의도적 변조는 못 막음 (사용자별 저장이라 피해는 본인 계정 한정)
-  - 예전에 만든 종류(id 가 'ai-<무작위>')도 그대로 동작함
-
-## [버그] "쓰레기통"이 식물로 등록됨 (2026-11-18, 담당: A)
-- 원인: `core/ai-config.js` 의 `AI_MODELS.text` 가 비어 있어 #/dev 에서 real 로 바꿔도 `provider.js` 가 mock 으로 동작.
-  mock 응답(`mocks/species.json`)은 항상 isPlant: true → 무엇을 넣어도 통과. (코드 필터로는 "식물인지"를 판단할 수 없음)
-- 수정: `mocks/species.json` 에 `"_mock": true` → normalize 가 `isMock` 으로 전달 → mock 으로 만든 종류는 `source: 'MOCK'` 으로 저장,
-  확인 창·선택 카드에 "테스트(mock) 모드라 AI가 실제로 확인하지 않았어요" 표시
-- 실제 판정을 쓰려면: `AI_MODELS.text` 에 공식 문서(https://firebase.google.com/docs/ai-logic/models)의 모델 이름을 넣고 #/dev 에서 real 로 전환 (팀 결정)
-- 정리할 것: 테스트로 만든 `users/{uid}/customSpecies` 문서(예: ai-쓰레기통)와 그 종류로 등록한 식물은 콘솔/내 식물 관리에서 삭제
-
-## [설정] 실제 AI(real) 모드 준비 (2026-11-18, 담당: A)
-- 수정한 파일: `public/js/core/ai-config.js` (`AI_MODELS.text = 'gemini-3.8-flash'`, `AI_MODE` 는 'mock' 유지),
-  `public/js/core/firebase-config.js` (`appCheckSiteKey` — reCAPTCHA v3 공개 사이트 키), `README.md` (실행·real 모드·테스트 안내)
-- Firebase 콘솔: AI Logic(Gemini Developer API) 시작, App Check(reCAPTCHA v3) 등록
-- 동작 확인 방법: README "실제 AI(real) 모드 켜기" 순서대로 디버그 토큰 등록 → #/dev 에서 real → advise 버튼 → 사용량 증가 확인
-- 남은 문제 / 알릴 것: 팀원은 각자 디버그 토큰 등록 필요. Firestore App Check 적용(Enforce)은 아직 끔
+## [P4] 알림함 · 브라우저 알림 (2026-11-15, 담당: C)
+- 만든 파일: `public/js/pages/notifications.js`, `public/css/pages/notifications.css`
+- 수정한 파일: `public/js/services/notifications.js` (C5 뼈대 → 완성, 함수 형식 유지), `public/js/pages/dev-ui.js` ([P4] 구역만)
+- 동작 확인 방법 (Firebase 설정 후):
+  - 오늘 체크리스트 없이 로그인 → 체크리스트 알림 1개 + 상단 🔔 숫자. 새로고침해도 같은 알림은 안 생김 (키 중복 제거)
+  - 알림 탭 → 해당 식물의 `#/checklist?plant=...` 로 이동 + 읽음 처리
+  - `#/dev` [P4] → [테스트 알림 만들기(체크리스트·리포트 각 1개)] → 리포트 알림은 `#/report/{지난달}?plant=...` 링크
+  - [브라우저 알림 받기] → 권한 허용 후 탭을 다른 탭으로 옮기고 알림 만들면 브라우저 알림. 클릭 → 앱으로 복귀 + 해당 화면
+  - [모두 읽음] → 뱃지 0
+  - 30일 이전 알림은 목록에서 숨김(삭제 아님)
+- 남은 문제 / 알릴 것:
+  - 선택 항목 FCM(앱 닫은 뒤 디바이스 푸시)은 **팀 결정 전까지 제외** (P4 §7 — 서버 필요, 00_MAIN §3 "백엔드 없음" 원칙 충돌)
+  - 리포트 알림의 본문은 P6 머지 전에도 정상 동작 (P6 는 리포트 문서 생성 쪽만 담당)
+  - **[P6 교차 계약 — P6 담당자 필수 확인]**
+    - `notifyReportCreated({ plantId, month })` 의 `plantId` 는 **문자열(식물 id)** 로 기대합니다. `startup.js:66` 에서 `ensureLastMonthReports` 가 반환한 `r` (=`{ plantId, month, created }`) 을 그대로 넘기므로 정상입니다.
+    - **지침 오타 주의:** `prompt/pages/P4_notifications.md` §4 예제는 `notifyReportCreated({ plantId: current, ... })` 로 **식물 변수**를 적고 있습니다. 이는 지침 오타이며, 실제 서명은 `plantId` (문자열) 입니다. P6 등이 지침을 그대로 베끼면 식물 이름이 `'내 식물'` 로 고정됩니다.
+    - 본 코드는 `plantId` 가 문자열이든 식물 변수든 모두 수용합니다 (`typeof plantId === 'string' ? plantId : plantId?.id ?? ''`).
+    - P6 의 `computeMonthlyStats` 가 체크리스트를 읽는 경우: `completedAt` = 실제 완료 날짜, `postponed` 는 절대 `isCompleted` 와 공존하지 않음 (P3 노트의 교차 계약과 동일).

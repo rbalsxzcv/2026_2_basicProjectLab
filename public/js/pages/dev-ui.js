@@ -397,12 +397,93 @@ function renderP2Section(root) {
 
 // ===== [P3] 체크리스트 테스트 — P3 담당자만 수정 =====
 function renderP3Section(root) {
-  root.innerHTML = html`<h2 class="dev-title">✅ [P3] 체크리스트</h2><p class="muted">P3 담당자가 테스트 버튼을 추가해요.</p>`;
+  if (!store.get('user')) {
+    root.innerHTML = html`<h2 class="dev-title">✅ [P3] 체크리스트</h2>${loggedOutNote}`;
+    return;
+  }
+  root.innerHTML = html`
+    <h2 class="dev-title">✅ [P3] 체크리스트</h2>
+    <p class="muted">현재 식물 기준으로 테스트해요. 결과를 <a href="#/checklist">체크리스트 화면</a>에서 확인하세요.</p>
+    <div class="row dev-wrap">
+      <button type="button" class="btn btn-secondary btn-sm" data-p3="regen">오늘 체크리스트를 AI로 다시 만들기</button>
+      <button type="button" class="btn btn-secondary btn-sm" data-p3="due-today">비료·잎 닦기 예정일을 오늘로</button>
+    </div>
+    <pre class="dev-pre" data-p3-result></pre>
+  `;
+  const pre = root.querySelector('[data-p3-result]');
+
+  on(root, 'click', '[data-p3]', async (event, el) => {
+    const current = requirePlant();
+    if (!current) return;
+    try {
+      const act = el.dataset.p3;
+      if (act === 'regen') {
+        // 오늘의 문서를 지운 뒤 다시 만들면 AI 코치가 오늘 할 일을 다시 고릅니다
+        try {
+          await devDeleteChecklist(current.id, today());
+        } catch {
+          /* 아직 없으면 그냥 만듦 */
+        }
+        // 공유 import 줄을 건드리지 않으려고 여기서만 동적 import
+        const { ensureTodayChecklist } = await import('../services/checklists.js');
+        const { checklist, created } = await ensureTodayChecklist(current);
+        showJson(pre, { created, generatedBy: checklist?.generatedBy, items: checklist?.items });
+        toast(created ? '오늘 체크리스트를 다시 만들었어요' : '오늘 체크리스트가 이미 있었어요', 'success');
+      } else if (act === 'due-today') {
+        await devSetScheduleDueDate(current.id, 'FERTILIZE', today());
+        await devSetScheduleDueDate(current.id, 'WIPE_LEAF', today());
+        toast('비료·잎 닦기 예정일을 오늘로 바꿨어요 (체크리스트를 다시 만들면 반영돼요)', 'success');
+      }
+    } catch (error) {
+      console.warn('[dev] [P3] 테스트 실패', error);
+      pre.textContent = `실패: ${error.message}`;
+    }
+  });
 }
 
 // ===== [P4] 알림 테스트 — P4 담당자만 수정 =====
 function renderP4Section(root) {
-  root.innerHTML = html`<h2 class="dev-title">🔔 [P4] 알림</h2><p class="muted">P4 담당자가 테스트 버튼을 추가해요.</p>`;
+  if (!store.get('user')) {
+    root.innerHTML = html`<h2 class="dev-title">🔔 [P4] 알림</h2>${loggedOutNote}`;
+    return;
+  }
+  root.innerHTML = html`
+    <h2 class="dev-title">🔔 [P4] 알림</h2>
+    <p class="muted">현재 식물 기준으로 테스트해요. 결과는 <a href="#/notifications">알림함</a>에서 확인하세요.</p>
+    <div class="row dev-wrap">
+      <button type="button" class="btn btn-secondary btn-sm" data-p4="clear">알림 모두 지우기</button>
+      <button type="button" class="btn btn-secondary btn-sm" data-p4="test">테스트 알림 만들기(체크리스트·리포트 각 1개)</button>
+    </div>
+    <pre class="dev-pre" data-p4-result></pre>
+  `;
+  const pre = root.querySelector('[data-p4-result]');
+
+  on(root, 'click', '[data-p4]', async (event, el) => {
+    const current = requirePlant();
+    if (!current) return;
+    try {
+      const act = el.dataset.p4;
+      if (act === 'clear') {
+        // 공유 import 줄을 건드리지 않으려고 여기서만 동적 import
+        const { markAllRead } = await import('../services/notifications.js');
+        await markAllRead();
+        toast('모든 알림을 읽음으로 바꾸어요', 'success');
+      } else if (act === 'test') {
+        const { notifyChecklistCreated, notifyReportCreated } = await import('../services/notifications.js');
+        const { ensureTodayChecklist } = await import('../services/checklists.js');
+        const { prevMonth, thisMonth } = await import('../utils/date.js');
+        const { checklist } = await ensureTodayChecklist(current);
+        await notifyChecklistCreated(current, checklist);
+        const reportMonth = prevMonth(thisMonth());
+        await notifyReportCreated({ plantId: current.id, month: reportMonth });
+        showJson(pre, { checklist: checklist?.items?.length ?? 0, reportMonth });
+        toast('테스트 알림을 만들었어요', 'success');
+      }
+    } catch (error) {
+      console.warn('[dev] [P4] 테스트 실패', error);
+      pre.textContent = `실패: ${error.message}`;
+    }
+  });
 }
 
 // ===== [P5] 환경 분석 테스트 — P5 담당자만 수정 =====
