@@ -72,6 +72,71 @@ vibe/
    * 예) P6의 리포트는 체크리스트 완료 기능 대신 [지난달 샘플 기록 만들기]로 시험
    * 예) P4의 리포트 알림은 [테스트 알림 만들기]로 시험
 
+## 실행 · 실제 AI(real) 모드 · 테스트할 때 알아 둘 것
+
+### 앱 실행
+```powershell
+# 프로젝트 맨 위 폴더에서 (public 폴더를 열어야 함 — 그냥 열면 GET / 404)
+python -m http.server 5500 --directory public
+```
+* 브라우저에서 **`http://localhost:5500`** 으로 엽니다. (`127.0.0.1` 말고 `localhost` — App Check 디버그 모드가 localhost 에서만 켜짐)
+* `file://` 로 열면 ES 모듈이 동작하지 않습니다.
+* 코드를 고친 뒤 화면이 그대로면 **Ctrl+F5** (강력 새로고침).
+
+### 개발 화면 `#/dev`
+* 메뉴에 링크가 없습니다. 주소창에 **`http://localhost:5500/#/dev`** 를 직접 입력하세요. (로그인 없이 열림, 배포 시 제거)
+* "🤖 AI · 날씨 테스트 (C2)" 구역에 AI·날씨 mock/real 스위치와 AI 함수별 시험 버튼이 있습니다.
+
+### 실제 AI(real) 모드 켜기 — 팀원마다 한 번씩
+Firebase 쪽 준비(AI Logic = Gemini Developer API, App Check = reCAPTCHA v3)와 코드 설정
+(`ai-config.js` 의 `AI_MODELS.text`, `firebase-config.js` 의 `appCheckSiteKey`)은 **이미 되어 있습니다.**
+각자 할 일은 아래 2가지입니다.
+
+1. **App Check 디버그 토큰 등록** (사람마다, 브라우저마다 따로)
+   1. `http://localhost:5500` 을 열고 F12 → Console 에 찍힌 `App Check debug token: xxxxxxxx-...` 를 복사
+   2. Firebase 콘솔 → **App Check → 앱** 탭 → 웹 앱 오른쪽 **⋮ → 디버그 토큰 관리 → 디버그 토큰 추가** 에 붙여 넣기 (이름 예: `이름-크롬`)
+   3. 새로고침
+   * 시크릿 창·다른 브라우저는 토큰이 달라서 다시 등록해야 합니다.
+   * 디버그 토큰은 비밀번호처럼 다루세요. Git·채팅방에 올리지 않습니다.
+2. **`#/dev` 에서 AI 모드 스위치를 켜서 `real` 로** 바꿉니다.
+   * 내 브라우저(localStorage)에만 저장돼서 다른 사람에게 영향이 없습니다. 끄면 다시 mock.
+
+### real 모드가 진짜로 동작하는지 확인
+`#/dev` 에서 **advise** 또는 **suggestChecklist** 버튼을 누르고 아래를 봅니다.
+
+| 확인할 것 | real 로 동작 중 | 아직 mock |
+| :--- | :--- | :--- |
+| 사용량 표시 | "글 **1**/200" 처럼 올라감 | 0 그대로 |
+| 결과 문장 | 누를 때마다 달라짐 | 항상 `mocks/*.json` 과 같음 |
+| F12 콘솔 | 경고 없음 | `[ai] real 모드지만 준비가 안 됐어요 … mock 으로 동작합니다` |
+
+### 문제 해결
+화면에는 "AI 코치가 잠시 쉬는 중이에요" 처럼 짧게만 나옵니다. **자세한 원인은 F12 콘솔의 `[ai] 호출 실패 …` 줄**을 보세요.
+
+| 콘솔 내용 | 원인 | 해결 |
+| :--- | :--- | :--- |
+| App Check / 401 / unauthenticated | 디버그 토큰 미등록 | 위 1번 |
+| `API_KEY_SERVICE_BLOCKED` | 웹 API 키에 API 제한이 걸림 | A에게 알리기 (Cloud 콘솔에서 Firebase AI Logic API 허용) |
+| 403 / PERMISSION_DENIED | AI Logic 설정 문제 | A에게 알리기 |
+| 404 / model not found | 모델 이름이 바뀜·종료됨 | A에게 알리기 ([모델 목록](https://firebase.google.com/docs/ai-logic/models)) |
+| 429 | 무료 요금제 분당 한도 | 잠시 후 다시 |
+| "오늘 AI 코치 이용량을 모두 썼어요" | 브라우저별 하루 한도 | F12 → Application → Local Storage → `plantCoach.aiUsage` 삭제 |
+
+### 꼭 지킬 것
+* `ai-config.js` 의 **`AI_MODE` 는 main 에서 항상 `'mock'`** — real 은 `#/dev` 스위치로만 켭니다.
+* `AI_MODELS`(모델 이름)·`appCheckSiteKey` 는 공통 설정입니다. 바꿀 일이 있으면 A에게.
+* reCAPTCHA **비밀 키**, App Check **디버그 토큰**, 개인 AI 키(Vertex AI 등)는 절대 코드·Git 에 넣지 않습니다. (사이트 키·firebaseConfig 는 공개용이라 괜찮음)
+* Firebase 콘솔에서 **Firestore 의 App Check 적용(Enforce)은 켜지 마세요.** 토큰을 등록하지 않은 팀원은 mock 모드여도 데이터를 못 읽게 됩니다.
+* 무료 사용량이 있으니 real 모드는 필요할 때만 켜세요.
+
+### AI로 새 식물 종류 추가 (식물 등록 화면)
+`#/plants/new` 에서 목록에 없는 이름(2글자 이상)을 입력하면 **[🤖 'OO' AI로 새 식물 추가하기]** 버튼이 나옵니다.
+AI가 생육 정보를 만들고 → **확인 창에서 [이 정보로 추가하기]를 눌러야만** 저장됩니다.
+* 저장 위치: `users/{uid}/customSpecies/ai-<이름>` (내 계정에서만 보임). `loadSpecies`·`getSpecies`·`searchSpecies` 결과에 자동으로 섞여 나오므로 **다른 페이지는 따로 할 일이 없습니다.**
+* **mock 모드에서는 AI가 판단하지 않아서 "쓰레기통" 같은 이름도 식물로 만들어집니다.** (확인 창에 🧪 표시, `source: "MOCK"` 으로 저장) 식물 판정을 시험하려면 real 모드로 하세요.
+* real 모드 확인 예: "쓰레기통" → "식물 이름으로 찾지 못했어요", "대마" → AI 호출 없이 안내, "아레카야자" → 확인 창에 🤖 표시
+* 테스트로 만든 종류는 수정·삭제 화면이 아직 없습니다. Firebase 콘솔 → Firestore → `users/{내 uid}/customSpecies` 에서 직접 지우세요. (그 종류로 등록한 식물은 "내 식물 관리"에서 삭제)
+
 ## 진행 순서
 
 ### 0. 시작 전에 (한 번만, A가 진행하고 모두 초대)

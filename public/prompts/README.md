@@ -18,6 +18,7 @@ AI에게 보내는 글(프롬프트)은 코드에 직접 쓰지 않고 이 폴�
 | `environment` | `analyzeEnvironment` | speciesName, profile, measuredLux, weather, homeType, windowDir, heaterOrAcExposed |
 | `checklist` | `suggestChecklist` | speciesName, profile, weather, latestEnvironment, dueSchedules, recentHistory |
 | `monthly-report` | `writeMonthlyReport` | speciesName, daysSincePurchase, lifespan, stats, monthlyHistory, previousReport |
+| `species` | `generateSpecies` | speciesName (사용자가 입력한 식물 이름) |
 
 ## 실험실 사용법
 
@@ -50,6 +51,7 @@ AI에게 보내는 글(프롬프트)은 코드에 직접 쓰지 않고 이 폴�
 | `checklist` | P3 (C) |
 | `environment`, `monthly-report` | P5 / P6 (D) |
 | `character` | A |
+| `species` | A |
 | 개선 절차 · 실험실 | P2 (B) |
 
 ## 꼭 지킬 것

@@ -147,6 +147,7 @@ Pages/services call ONLY these functions. Images are **data URL strings** (`data
 | `analyzeEnvironment` | `{ speciesName, profile, measuredLux, weather, homeType, windowDir, heaterOrAcExposed }` | `{ goodPoint, actions: [1–2] }` |
 | `suggestChecklist` | `{ speciesName, profile, weather, latestEnvironment, dueSchedules: [], recentHistory: [] }` | `{ items: [{ category, taskType, title }] }` |
 | `writeMonthlyReport` | `{ speciesName, daysSincePurchase, lifespan, stats, monthlyHistory: [], previousReport }` | `{ praise, suggestions: [1–2], repotNotice: string\|null, lifespanNotice: string\|null }` |
+| `generateSpecies` | `{ speciesName }` (user-typed name) | `{ isPlant, rejectReason: null\|'NOT_PLANT'\|'NOT_GROWABLE'\|'RESTRICTED', isMock: boolean (mock response = no real judgment), name, aliases, luxMin, luxMax, tempMin, tempMax, humidityMin, humidityMax, waterIntervalDays, fertilizeIntervalDays, wipeLeafIntervalDays, repotIntervalDays, lifespanType, defaultLifespanDays, careTip }` (same shape as a `plant-species.json` entry + `isPlant`, `rejectReason`). Pages don't call it directly: use `services/species.js` `previewSpeciesByName(name)` → `{ species, isNew }` (no save) → after user confirms, `saveSpeciesDraft(species)` (saves). `addSpeciesByName(name)` = both without confirmation. |
 | `getWeather(region)` (`core/weather.js`) | `'서울특별시'` | `{ tempC, humidity, precipitation: boolean, source: 'mock'\|'real' }` |
 
 `recentHistory`, `monthlyHistory` = arrays of `aiHistory.summary` objects (no photos, latest 5 by default).
@@ -156,6 +157,9 @@ All personal data under `users/{uid}`. Timestamps: `serverTimestamp()` / `Timest
 ```text
 users/{uid}
   loginId: string   nickname: string   home: { region: string, homeType: string }   createdAt: Timestamp
+
+users/{uid}/customSpecies/{speciesId}     # AI-created species (id = 'ai-' + normalized name); merged into loadSpecies/getSpecies/searchSpecies
+  same fields as a plant-species.json entry   source: 'AI'|'MOCK' (MOCK = made in mock mode, not really checked)   createdAt: Timestamp
 
 users/{uid}/plants/{plantId}
   speciesId: string   name: string   purchasedAt: 'YYYY-MM-DD'
