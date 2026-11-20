@@ -467,7 +467,7 @@ function renderP4Section(root) {
         // 공유 import 줄을 건드리지 않으려고 여기서만 동적 import
         const { markAllRead } = await import('../services/notifications.js');
         await markAllRead();
-        toast('모든 알림을 읽음으로 바꾼어요', 'success');
+        toast('모든 알림을 읽음으로 바꾸어요', 'success');
       } else if (act === 'test') {
         const { notifyChecklistCreated, notifyReportCreated } = await import('../services/notifications.js');
         const { ensureTodayChecklist } = await import('../services/checklists.js');
