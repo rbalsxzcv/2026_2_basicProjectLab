@@ -87,3 +87,28 @@
   - **공통 통합 확인(가입 → 식물 등록 → 메인 → 로그아웃 → 다시 로그인)은 Firebase 프로젝트를 연결한 뒤 해야 함.**
     통과하면 아래 줄을 "공통 완료·동결, P1~P6 시작 가능" 으로 바꾸세요.
   - 상태: 공통 코드 작성 완료 — Firebase 연결 후 통합 확인 대기
+
+## [P5] AI 환경 분석 (2026-11-16, 담당: D)
+- 만든 파일: `public/js/utils/lux.js`, `public/js/utils/envScore.js`, `public/js/pages/environment.js`, `public/css/pages/environment.css`
+- 수정한 파일: `public/js/pages/dev-ui.js` ([P5] 구역), `docs/PROGRESS.md`
+- 동작 확인 방법:
+  - `#/environment` 에서 [측정 시작] → 3초 원형 진행 후 "약 ~ lux (추정)" 표시 및 카메라 종료 확인 (권한 거부·비HTTPS 시 4개 위치 프리셋 선택)
+  - 거주지역 날씨 표시 확인 (mock 모드에서 "예시 날씨" 태그)
+  - 창문 방향·냉난방기 토글 선택 후 [분석하기] → 점수·빛 판정·AI 코치 조언·세부 막대 표시 및 `environments`/`aiHistory` 저장
+  - `public/mocks/environment.json` 이름을 임시 변경해 AI 실패 시 `ruleBasedTips`("기본 가이드를 보여 드려요") 폴백 확인
+  - `#/dev` → `[P5] 환경 분석` 구역에서 300 / 2,000 / 20,000 lux 가짜 측정값 분석 버튼 확인
+- 남은 문제 / 다른 담당자에게 알릴 것:
+  - 휴대폰 실제 후면 카메라 테스트는 HTTPS(Firebase Hosting 배포) 환경에서 확인 필요
+  - Firebase 콘솔 연결 전이라면 Firestore 저장·로그인 흐름은 콘솔 설정 후 확인 필요
+
+## [P6] 월간 리포트 (2026-11-20, 담당: D)
+- 만든 파일: `public/js/pages/report.js`, `public/css/pages/report.css`
+- 수정한 파일: `public/js/services/reports.js` (C5 뼈대 완성), `public/js/pages/dev-ui.js` ([P6] 구역), `docs/PROGRESS.md`
+- 동작 확인 방법:
+  - `#/dev` → `[P6] 월간 리포트` → `[지난달 샘플 기록 만들기]` → `[지난달 리포트 강제 생성]` 으로 통계·AI 칭찬·제안 확인
+  - `#/report` 에서 4개 통계 카드, 이전 달 대비 변화(▲ 초록 / ▼ 회색), AI 칭찬, 다음 달 습관, 분갈이/수명 안내 카드 확인
+  - 이번 달 선택 시 "이번 달 기록 미리보기"만 표시되고 AI 호출이 없는지 확인
+  - 이미 저장된 리포트를 다시 열 때 AI 재호출(`[ai]` 로그)이 없는지 확인
+- 남은 문제 / 다른 담당자에게 알릴 것:
+  - `startup.js` 수정 없이 기존 `ensureLastMonthReports` 뼈대 연결 그대로 동작함
+  - Firebase 콘솔 연결 후 실제 계정에서 샘플 생성·리포트 생성·180일 이상 분갈이 안내 최종 확인 필요
