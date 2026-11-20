@@ -1,0 +1,4 @@
+[
+  { "label": "몬스테라", "input": { "speciesName": "몬스테라" } },
+  { "label": "스투키", "input": { "speciesName": "스투키" } }
+]

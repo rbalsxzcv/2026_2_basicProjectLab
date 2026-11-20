@@ -1,79 +1,125 @@
-/**
- * 파일: public/js/ui/diagnosis-flow.js
- * 역할: 사진 → (질문 → 처방) 흐름을 여러 화면에서 다시 쓰기 위한 함수 (캘린더, 체크리스트)
- * 사용하는 파일: services/photos.js, services/images.js, utils/image.js, utils/date.js, ui/components.js
- * 담당: C5 (뼈대) → P1 (완성)
- *
- * 이 파일은 P1이 완성한다(질문·처방·경험치). 함수 이름·인자·반환 형식은 바꾸지 않는다.
- *
- * ── 지금(뼈대) 동작 ──
- *  사진 고르기 → 미리보기 확인 → photos 에 기록 (diagnosis: null) → 끝. AI 호출 없음.
- */
-
 import { html } from '../utils/dom.js';
-import { toast, openModal } from './components.js';
-import { addPhoto } from '../services/photos.js';
+import { toast, openModal, choiceModal, confirmModal, showLoading, hideLoading } from './components.js';
+import { addPhoto, hasPhotoOn } from '../services/photos.js';
+import { addHistory } from '../services/aiHistory.js';
+import { awardExp, markCared, setAlert, refreshPlantState, EXP } from '../services/game.js';
+import { celebrateIfLeveledUp } from './celebrate.js';
 import { prepareImageForSave } from '../services/images.js';
 import { fileToDataUrl } from '../utils/image.js';
 import { today } from '../utils/date.js';
+import { startDiagnosis, finishDiagnosis, buildHistorySummary } from '../services/diagnosis.js';
 
-// 파일 선택 창을 열고 고른 파일을 돌려줌. 취소하면 null
-// ※ 브라우저는 "사용자가 누른 직후"에만 파일 창을 열어 줍니다. 그래서 await 전에 바로 click() 합니다.
-function pickImageFile() {
+export function pickDiagnosisImageFile() {
   return new Promise((resolve) => {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
     input.setAttribute('capture', 'environment');
     input.addEventListener('change', () => resolve(input.files?.[0] ?? null), { once: true });
-    input.addEventListener('cancel', () => resolve(null), { once: true }); // 최신 브라우저: 취소 이벤트
+    input.addEventListener('cancel', () => resolve(null), { once: true });
     input.click();
   });
 }
 
-/**
- * @param {object} options
- * @param {object} options.plant          식물 객체 (id 필요)
- * @param {object} [options.species]      식물 종류 (P1 에서 AI 진단에 사용)
- * @param {File}   [options.imageFile]    이미 고른 파일이 있으면 전달 (없으면 파일 창을 엶)
- * @param {boolean} [options.withDiagnosis=true]  false 면 사진만 기록
- * @returns {Promise<{photo, diagnosis, expResult} | null>}  사용자가 취소하면 null
- */
+function cancelOnNavigation() {
+  const close = () => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+  window.addEventListener('hashchange', close, { once: true });
+  return () => window.removeEventListener('hashchange', close);
+}
+
 export async function runDiagnosisFlow({ plant, species = null, imageFile = null, withDiagnosis = true } = {}) {
-  const file = imageFile ?? (await pickImageFile());
-  if (!file) return null;
-
+    let file = imageFile;
   let dataUrl;
+  let diagnosis = null;
+  const removeNavigationHandler = cancelOnNavigation();
   try {
-    dataUrl = await fileToDataUrl(file);
-  } catch (error) {
-    toast(error.message || '사진을 읽지 못했어요.', 'error');
-    return null;
-  }
+    while (!file) {
+      file = await pickDiagnosisImageFile();
+      if (!file) return null;
+      try { dataUrl = await fileToDataUrl(file); }
+      catch (error) { toast(error.message || '사진을 읽지 못했어요.', 'error'); file = null; continue; }
+      const accepted = await openModal({
+        title: '사진 기록',
+        body: html`<div class="stack center"><img src="${dataUrl}" alt="고른 사진 미리보기" style="max-height:240px;max-width:100%;border-radius:16px;margin:auto"/><p>이 사진으로 기록할까요?</p></div>`,
+        actions: [{ label: '기록하기', value: 'save', variant: 'primary' }, { label: '다시 고르기', value: 'retry', variant: 'ghost' }],
+      });
+      if (accepted === null) return null;
+      if (accepted === 'retry') { file = null; continue; }
+      break;
+    }
+    if (!dataUrl) dataUrl = await fileToDataUrl(file);
 
-  const ok = await openModal({
-    title: '사진 기록',
-    body: html`
-      <div class="stack center">
-        <img src="${dataUrl}" alt="고른 사진 미리보기" style="max-height: 240px; border-radius: 16px; margin: 0 auto;" />
-        <p>이 사진으로 기록할까요?</p>
-      </div>
-    `,
-    actions: [
-      { label: '기록하기', value: true, variant: 'primary' },
-      { label: '취소', value: false, variant: 'ghost' },
-    ],
-  });
-  if (!ok) return null;
+    if (withDiagnosis) {
+      let first;
+      try {
+        showLoading('AI 코치가 잎을 살펴보는 중이에요…');
+        first = await startDiagnosis({ imageDataUrl: dataUrl, speciesName: species?.name ?? plant?.name ?? '식물' });
+      } catch (error) {
+        toast(error.message || '사진을 살펴보지 못했어요.', 'error');
+        if (!(await confirmModal('사진만 먼저 기록할까요?', { okLabel: '사진만 기록하기', cancelLabel: '취소' }))) return null;
+      } finally { hideLoading(); }
 
-  try {
+      if (first) {
+        const options = first.options?.length === 3 ? first.options : ['흙이 축축해요', '흙이 바짝 말라있어요', '잘 모르겠어요'];
+        const userAnswer = await choiceModal({ title: '조금만 더 알려 주세요', question: `사진으로 보면 ${first.symptoms}\n\n${first.question}`, options });
+        if (userAnswer === null) {
+          const photoOnly = await confirmModal('진단 없이 사진만 기록할까요?', { okLabel: '사진만 기록하기', cancelLabel: '취소' });
+          if (!photoOnly) return null;
+        } else {
+          let guideLoading = false;
+          try {
+            showLoading('맞춤 가이드를 만드는 중이에요…');
+            guideLoading = true;
+            const result = await finishDiagnosis({ plantId: plant.id, speciesName: species?.name ?? plant?.name ?? '식물', first, userAnswer });
+
+            // 결과 모달이 로딩 오버레이 뒤에 가려지지 않도록, 결과를 받은 즉시 닫습니다.
+            hideLoading({ force: true });
+            guideLoading = false;
+
+            diagnosis = { ...first, userAnswer, ...result };
+            const resultChoice = await openModal({
+              title: diagnosis.summaryTag ?? '오늘 해 볼 일',
+              body: html`<div class="stack"><img src="${dataUrl}" alt="진단한 식물 사진" style="width:100%;max-height:220px;object-fit:cover;border-radius:14px"/><p><strong>사진으로 보면</strong> ${diagnosis.symptoms}</p><p><strong>오늘 해 볼 일</strong></p><ol>${diagnosis.advice.map((item) => html`<li>${item}</li>`)}</ol></div>`,
+              actions: [ ...(diagnosis.severity === 'watch' ? [{ label: '다 확인했어요', value: 'clear', variant: 'secondary' }] : []), { label: '확인', value: 'ok', variant: 'primary' }],
+            });
+            diagnosis.clearAlert = resultChoice === 'clear';
+          } catch (error) {
+            diagnosis = null;
+            toast(error.message || '맞춤 가이드를 만들지 못했어요.', 'error');
+            if (!(await confirmModal('사진만 먼저 기록할까요?', { okLabel: '사진만 기록하기', cancelLabel: '취소' }))) return null;
+          } finally {
+            // 요청 실패처럼 결과를 받기 전에 빠져나온 경우에도 반드시 닫습니다.
+            if (guideLoading) hideLoading({ force: true });
+          }
+        }
+      }
+    }
+
+    const date = today();
+    const alreadyRecorded = await hasPhotoOn(plant.id, date);
     const image = await prepareImageForSave(dataUrl);
-    const photo = await addPhoto(plant.id, { image, date: today(), diagnosis: null });
-    toast('사진을 기록했어요', 'success');
-    return { photo, diagnosis: null, expResult: null };
+    const storedDiagnosis = diagnosis ? { ...diagnosis } : null;
+    if (storedDiagnosis) delete storedDiagnosis.clearAlert;
+    const photo = await addPhoto(plant.id, { image, date, diagnosis: storedDiagnosis });
+    if (diagnosis) {
+      await addHistory(plant.id, 'PHOTO_DIAGNOSIS', buildHistorySummary({ first: diagnosis, userAnswer: diagnosis.userAnswer, result: diagnosis }));
+      await setAlert(plant.id, diagnosis.severity === 'watch' && !diagnosis.clearAlert);
+      if (diagnosis.clearAlert) await setAlert(plant.id, false);
+    }
+    let expResult = null;
+    if (!alreadyRecorded) {
+      expResult = await awardExp(plant.id, EXP.PHOTO, 'PHOTO');
+      await markCared(plant.id);
+      await celebrateIfLeveledUp(expResult, plant);
+    } else toast('오늘 사진 경험치는 이미 받았어요.');
+    await refreshPlantState(plant.id);
+    toast('사진을 기록했어요.', 'success');
+    return { photo, diagnosis: storedDiagnosis, expResult };
   } catch (error) {
-    console.warn('[diagnosis-flow] 사진 저장 실패', error);
-    toast(error.message?.includes('사진이 너무 커요') ? error.message : '사진을 저장하지 못했어요. 다시 시도해 주세요.', 'error');
+    console.warn('[diagnosis-flow] 사진 기록 실패', error);
+    toast(error.message || '사진을 기록하지 못했어요.', 'error');
     return null;
+  } finally {
+    removeNavigationHandler();
   }
 }

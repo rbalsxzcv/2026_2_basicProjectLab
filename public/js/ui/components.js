@@ -150,8 +150,8 @@ export function showLoading(message = '잠시만 기다려 주세요…') {
   overlay.querySelector('.loading-message').textContent = message;
 }
 
-export function hideLoading() {
-  loadingCount = Math.max(0, loadingCount - 1);
+export function hideLoading({ force = false } = {}) {
+  loadingCount = force ? 0 : Math.max(0, loadingCount - 1);
   if (loadingCount > 0) return;
   document.querySelector('#loading-root .loading-overlay')?.remove();
 }

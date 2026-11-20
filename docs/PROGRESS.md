@@ -88,42 +88,16 @@
     통과하면 아래 줄을 "공통 완료·동결, P1~P6 시작 가능" 으로 바꾸세요.
   - 상태: 공통 코드 작성 완료 — Firebase 연결 후 통합 확인 대기
 
-## [P3] 체크리스트 · Safe-Lock (2026-11-15, 담당: C)
-- 만든 파일: `public/js/pages/checklist.js`, `public/css/pages/checklist.css`
-- 수정한 파일: `public/js/services/checklists.js` (C5 뼈대 → 완성, 함수 형식 유지), `public/js/pages/dev-ui.js` ([P3] 구역만)
-- 동작 확인 방법 (Firebase 설정 후):
-  - `#/checklist` 진입 → 오늘 문서 1개만 생성 (`#/dev` [오늘 체크리스트를 AI로 다시 만들기] 로 재생성)
-  - mock 에 WATER 가 있어도 데일리 루틴엔 물주기가 없음. 물주기는 정기 관리만 (`#/dev` 공용 [물주기 예정일을 오늘로] → [오늘 체크리스트 지우기] → 진입)
-  - 데일리 +5 / 정기 +20 EXP → 메인 EXP 바에 반영, 레벨업 시 축하 모달
-  - 물주기 완료 버튼 → 흙 확인 팝업 (배경 클릭·ESC 로 닫히지 않음)
-    → [아직 축축해요]: 미완료 · 무경험치 · `schedules/WATER.dueDate` = 오늘+2, 체크리스트에 미룸 카드
-    → [말라 있어요]: 완료 · +20 EXP · `dueDate` = 오늘+간격
-  - 지나간 정기 관리: 메인에서 WAITING → 완료 후 GROWING(30분) → PEACEFUL
-  - [📷 사진으로 상태 확인하기] → `runDiagnosisFlow` (P1 머지 전엔 사진만 기록됨 — 정상)
-- 남은 문제 / 알릴 것:
-  - P1 이 머지되기 전까지 [사진으로 확인] 은 사진 기록만 (지침 §1-4 의 정상 동작)
-  - 프롬프트·mock (`checklist.v1.txt` · `mocks/checklist.json`) 은 C2 값 유지 — 문구 수정 필요 시 이 브랜치에서 반영
-  - **[P6 교차 계약 — P6 담당자 필수 확인]** `services/checklists.js` 의 체크리스트 항목은 `00_MAIN.md` §5.5 형태 그대로입니다.
-    - `completedAt` = 실제 완료 날짜(UTC 기준 `YYYY-MM-DD`). P6의 `waterOnTimeRate` 계산(`completedAt ≤ dueDate + 1 day`)이 가능합니다.
-    - `postponed` 항목은 **절대 `isCompleted`와 동시에 true가 될 수 없습니다**(완료 로직이 미루기 분기를 먼저 return). P6의 분모에서 미루기 제외 규칙과 모순 없습니다.
-    - `summarize()`는 미루기 항목을 `{total, done, remaining, percent}` 에서 제외합니다. 메인 카드와 P6의 `routineRate` 둘 다 동일 기준으로 동작합니다.
-    - 미루기 후 다음 날 `schedules/WATER.dueDate` = 오늘+2 (postponeSchedule). P6는 `schedules` 에서도 정기 관리 날짜를 읽을 수 있습니다.
+## [P1] 성장 캘린더 · 대화형 사진 진단 (2026-11-17, 담당: B)
+- 만든 파일: `public/js/services/diagnosis.js`, `public/js/pages/calendar.js`, `public/css/pages/calendar.css`
+- 완성한 파일: `public/js/ui/diagnosis-flow.js` (사진 미리보기 → 관찰 → 흙 질문 → 오늘 가이드 → 사진·AI 기록·경험치 저장)
+- 수정한 파일: `public/js/pages/dev-ui.js` ([P1] 구역에 오늘 사진 기록 초기화와 캘린더 링크 추가)
+- 동작 확인 방법: Firebase 설정 후 `#/dev` 에서 AI 모드를 mock 으로 두고 `[P1] 오늘 사진 기록 지우기` 로 일일 경험치 흐름 초기화 → `#/calendar` 에서 사진 진단과 사진만 기록을 각각 확인
+- 남은 확인: Firebase 연결 후 diagnose-1 / diagnose-2 mock, 하루 첫 사진 +15 EXP, 월 이동·날짜 선택·기록 펼치기에서 AI 미호출을 통합 확인
 
-## [P4] 알림함 · 브라우저 알림 (2026-11-15, 담당: C)
-- 만든 파일: `public/js/pages/notifications.js`, `public/css/pages/notifications.css`
-- 수정한 파일: `public/js/services/notifications.js` (C5 뼈대 → 완성, 함수 형식 유지), `public/js/pages/dev-ui.js` ([P4] 구역만)
-- 동작 확인 방법 (Firebase 설정 후):
-  - 오늘 체크리스트 없이 로그인 → 체크리스트 알림 1개 + 상단 🔔 숫자. 새로고침해도 같은 알림은 안 생김 (키 중복 제거)
-  - 알림 탭 → 해당 식물의 `#/checklist?plant=...` 로 이동 + 읽음 처리
-  - `#/dev` [P4] → [테스트 알림 만들기(체크리스트·리포트 각 1개)] → 리포트 알림은 `#/report/{지난달}?plant=...` 링크
-  - [브라우저 알림 받기] → 권한 허용 후 탭을 다른 탭으로 옮기고 알림 만들면 브라우저 알림. 클릭 → 앱으로 복귀 + 해당 화면
-  - [모두 읽음] → 뱃지 0
-  - 30일 이전 알림은 목록에서 숨김(삭제 아님)
-- 남은 문제 / 알릴 것:
-  - 선택 항목 FCM(앱 닫은 뒤 디바이스 푸시)은 **팀 결정 전까지 제외** (P4 §7 — 서버 필요, 00_MAIN §3 "백엔드 없음" 원칙 충돌)
-  - 리포트 알림의 본문은 P6 머지 전에도 정상 동작 (P6 는 리포트 문서 생성 쪽만 담당)
-  - **[P6 교차 계약 — P6 담당자 필수 확인]**
-    - `notifyReportCreated({ plantId, month })` 의 `plantId` 는 **문자열(식물 id)** 로 기대합니다. `startup.js:66` 에서 `ensureLastMonthReports` 가 반환한 `r` (=`{ plantId, month, created }`) 을 그대로 넘기므로 정상입니다.
-    - **지침 오타 주의:** `prompt/pages/P4_notifications.md` §4 예제는 `notifyReportCreated({ plantId: current, ... })` 로 **식물 변수**를 적고 있습니다. 이는 지침 오타이며, 실제 서명은 `plantId` (문자열) 입니다. P6 등이 지침을 그대로 베끼면 식물 이름이 `'내 식물'` 로 고정됩니다.
-    - 본 코드는 `plantId` 가 문자열이든 식물 변수든 모두 수용합니다 (`typeof plantId === 'string' ? plantId : plantId?.id ?? ''`).
-    - P6 의 `computeMonthlyStats` 가 체크리스트를 읽는 경우: `completedAt` = 실제 완료 날짜, `postponed` 는 절대 `isCompleted` 와 공존하지 않음 (P3 노트의 교차 계약과 동일).
+## [P2] 프롬프트 실험실 · 템플릿 버전 비교 (2026-11-17, 담당: B)
+- 만든 파일: `public/js/pages/prompt-lab.js`, `public/css/pages/prompt-lab.css`, `public/prompts/samples/*-input.json`
+- 추가한 프롬프트: `public/prompts/advice.v2.txt` (후보 버전, 아직 채택 안 함; `PROMPT_VERSION` 은 v1 유지)
+- 수정한 파일: `public/prompts/README.md` (실험 절차·mock 한계·후보 기록), `public/js/pages/dev-ui.js` ([P2] 실험실 링크)
+- 동작 확인 방법: 로그인 후 `#/prompt-lab` 에서 템플릿·입력·버전·반복 횟수 선택 → 결과 JSON 모양 검사 및 JSON 다운로드 확인
+- 남은 확인: real 모드 비교는 Firebase AI Logic / App Check 설정 후 수행. mock 응답은 고정이므로 프롬프트 버전 간 품질 차이를 평가하지 않음

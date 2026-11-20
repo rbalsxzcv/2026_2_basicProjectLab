@@ -1,0 +1,4 @@
+[
+  { "label": "흙이 축축해요", "input": { "speciesName": "몬스테라", "symptoms": "아래쪽 잎 몇 장이 살짝 아래로 처져 있고 잎 끝이 조금 갈색빛이에요.", "userAnswer": "흙이 축축해요", "recentHistory": [] } },
+  { "label": "흙이 말랐어요", "input": { "speciesName": "몬스테라", "symptoms": "잎 색이 고르고 윤기가 있어요.", "userAnswer": "흙이 바짝 말라있어요", "recentHistory": [{ "type": "PHOTO_DIAGNOSIS", "summaryTag": "건강해요", "date": "2026-11-10" }] } }
+]
