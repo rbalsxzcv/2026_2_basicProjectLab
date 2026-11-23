@@ -25,15 +25,24 @@
 
 ### 1) App Check 디버그 토큰 등록
 
-localhost 에서는 reCAPTCHA 대신 **디버그 토큰**으로 App Check 를 통과합니다.
+배포 주소(`*.web.app`, `*.firebaseapp.com`)가 아닌 곳(localhost, 내부 IP 등)에서는 reCAPTCHA 대신 **디버그 토큰**으로 App Check 를 통과합니다.
+
+#### 기본 — 고정 토큰 (`firebase-config.js` 의 `appCheckDebugToken`)
+
+* 이 값이 Firebase 콘솔(아래 2번 위치)에 **한 번** 등록돼 있으면, 팀원은 **아무것도 할 필요 없이** 바로 AI 를 쓸 수 있습니다.
+  어느 PC·브라우저든, 쿠키·사이트 데이터를 지워도 동작합니다.
+* ⚠ 보안 절충: 토큰이 Git 에 올라가 있어서, 저장소를 볼 수 있는 사람은 App Check 를 통과할 수 있습니다.
+  문제가 생기면 콘솔에서 토큰을 삭제하고 새 UUID(PowerShell `[guid]::NewGuid()`)로 바꿔 등록합니다.
+
+#### 대안 — 브라우저별 임의 토큰 (`appCheckDebugToken = ''` 으로 비웠을 때)
 
 1. `http://localhost:5500` 을 열고 **F12 → Console** 에 찍힌 `App Check debug token: xxxxxxxx-...` 를 복사
 2. Firebase 콘솔 → **App Check → 앱** 탭 → 웹 앱 오른쪽 **⋮ → 디버그 토큰 관리 → 디버그 토큰 추가** 에 붙여 넣기
    (이름 예: `홍길동-크롬`)
 3. 새로고침
 
-* 시크릿 창·다른 브라우저·다른 컴퓨터는 토큰이 달라서 **다시 등록**해야 합니다.
-* 디버그 토큰은 비밀번호처럼 다루세요. **Git·채팅방에 올리지 않습니다.**
+* 시크릿 창·다른 브라우저·다른 컴퓨터, 그리고 **쿠키·사이트 데이터를 지운 뒤**에는 토큰이 바뀌어 **다시 등록**해야 합니다.
+* 이 방식의 임의 토큰은 비밀번호처럼 다루세요. **Git·채팅방에 올리지 않습니다.**
 
 ### 2) `#/dev` 에서 AI 모드를 real 로
 
@@ -71,6 +80,6 @@ localhost 에서는 reCAPTCHA 대신 **디버그 토큰**으로 App Check 를 �
 
 * `ai-config.js` 의 **`AI_MODE` 는 main 에서 항상 `'mock'`** — real 은 `#/dev` 스위치로만 켭니다.
 * `AI_MODELS`·`appCheckSiteKey` 는 공통 설정입니다. 바꿀 일이 있으면 담당자 A 에게.
-* reCAPTCHA 비밀 키, App Check 디버그 토큰, 개인 AI 키(Vertex AI 등)는 **절대 코드·Git 에 넣지 않습니다.**
+* reCAPTCHA 비밀 키, 개인 AI 키(Vertex AI 등)는 **절대 코드·Git 에 넣지 않습니다.** (App Check 고정 디버그 토큰만 편의를 위해 예외 — B-1 참고)
 * Firebase 콘솔에서 **Firestore 의 App Check 적용(Enforce)은 켜지 마세요.** 토큰을 등록하지 않은 팀원은 mock 모드여도 데이터를 못 읽게 됩니다.
 * 무료 사용량이 있으니 real 모드는 필요할 때만 켜세요.

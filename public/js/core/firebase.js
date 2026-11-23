@@ -60,7 +60,7 @@ import {
   ReCaptchaV3Provider,
 } from 'https://www.gstatic.com/firebasejs/13.3.0/firebase-app-check.js';
 
-import { firebaseConfig, appCheckSiteKey, isFirebaseConfigured } from './firebase-config.js';
+import { firebaseConfig, appCheckSiteKey, appCheckDebugToken, isFirebaseConfigured } from './firebase-config.js';
 
 // 설정이 비어 있으면 null 로 두고, app.js 가 설정 안내 화면을 보여 줍니다.
 let app = null;
@@ -74,9 +74,13 @@ if (isFirebaseConfigured) {
   // ── App Check: AI를 쓰기 "전에" 먼저 켜야 합니다 ──
   if (appCheckSiteKey) {
     try {
-      // localhost 에서는 reCAPTCHA 대신 디버그 토큰을 씁니다. (콘솔에 찍힌 토큰을 Firebase 에 등록)
-      if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-        self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+      // 배포 주소가 아니면(localhost, 내부 IP 등) reCAPTCHA 대신 디버그 토큰을 씁니다.
+      //  - appCheckDebugToken(firebase-config.js) 이 있으면 그 고정 토큰 사용
+      //    → 콘솔에 한 번만 등록하면 어느 PC·브라우저에서도, 사이트 데이터를 지워도 계속 동작
+      //  - 비어 있으면 브라우저마다 임의 토큰 생성 (콘솔에 찍힌 토큰을 Firebase 에 등록해야 함)
+      const isDeployed = /\.(web\.app|firebaseapp\.com)$/.test(location.hostname);
+      if (!isDeployed) {
+        self.FIREBASE_APPCHECK_DEBUG_TOKEN = appCheckDebugToken || true;
       }
       initializeAppCheck(app, {
         provider: new ReCaptchaV3Provider(appCheckSiteKey),

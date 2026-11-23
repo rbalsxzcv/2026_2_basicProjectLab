@@ -44,8 +44,14 @@ function plantSubCol(plantId, name) {
   return collection(db, 'users', currentUid(), 'plants', plantId, name);
 }
 
-function reportRef(plantId, month) {
-  return doc(db, 'users', currentUid(), 'plants', plantId, 'monthlyReports', month);
+// uid: 오래 걸리는 작업은 "시작할 때의 계정"을 넘겨서, 중간에 계정이 바뀌어도 엉뚱한 계정에 쓰지 않게 함
+function reportRef(plantId, month, uid = currentUid()) {
+  return doc(db, 'users', uid, 'plants', plantId, 'monthlyReports', month);
+}
+
+// 작업 도중 로그아웃·다른 계정 로그인이 일어났는지
+function accountChanged(uid) {
+  return store.get('user')?.uid !== uid;
 }
 
 // 'YYYY-MM' 의 다음 달 계산 (수명 종료일 판정용)
@@ -174,6 +180,7 @@ function applySafetyNotices(aiResult, { daysSincePurchase, lifespan, month }) {
 // 리포트 만들기 (통계 + AI 글 → Firestore 저장, 기존 문서가 있으면 절대 덮어쓰지 않음)
 export async function generateReport(plant, month) {
   if (!plant?.id) throw new Error('식물 정보가 필요해요.');
+  const uid = currentUid(); // 시작 시점의 계정에 고정
 
   // 이미 리포트가 있으면 AI를 다시 부르지 않고 그대로 반환
   const existing = await getReport(plant.id, month);
@@ -223,8 +230,11 @@ export async function generateReport(plant, month) {
     createdAt: serverTimestamp(),
   };
 
+  // AI 를 기다리는 사이 다른 계정으로 바뀌었으면 저장하지 않음
+  if (accountChanged(uid)) throw new Error('계정이 바뀌어 리포트 저장을 중단했어요.');
+
   // 트랜잭션으로 "없을 때만" 저장 → 중복 생성 방지
-  const ref = reportRef(plant.id, month);
+  const ref = reportRef(plant.id, month, uid);
   return runTransaction(db, async (tx) => {
     const snap = await tx.get(ref);
     if (snap.exists()) return { id: snap.id, ...snap.data() };
@@ -236,10 +246,13 @@ export async function generateReport(plant, month) {
 // 시작 작업(startup.js)이 부름: 지난달 리포트가 없으면 식물별로 순차 생성
 // 반환: [{ plantId, month, created }]
 export async function ensureLastMonthReports(plants) {
+  const uid = currentUid(); // 시작 시점의 계정에 고정
   const month = prevMonth(thisMonth());
   const results = [];
 
   for (const plant of plants ?? []) {
+    // 도중에 계정이 바뀌면 남은 식물은 만들지 않음 (결과도 비워서 알림이 생기지 않게)
+    if (accountChanged(uid)) return [];
     if (!isEligible(plant, month)) {
       results.push({ plantId: plant.id, month, created: false });
       continue;
@@ -259,7 +272,7 @@ export async function ensureLastMonthReports(plants) {
     }
   }
 
-  return results;
+  return accountChanged(uid) ? [] : results;
 }
 
 // 그 달 리포트를 만들 수 있는 식물인지: 그 달 마지막 날 이전에 등록된 식물
