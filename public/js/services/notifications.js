@@ -7,7 +7,7 @@
  * 사용하는 파일: core/firebase.js, core/store.js, utils/date.js, services/checklists.js (summarize)
  * 담당: P4
  *
- * ★ 함수 이름·인자·반환 형식은 C5 뼈대 그대로 유지.
+ * ★ 함수 이름·인자·반환 형식은 00_MAIN §5 계약 그대로 유지 (startup.js 가 사용).
  * ★ 브라우저 알림은 "탭이 화면에 없을 때만" 띄웁니다 (앱이 보여 있으면 알림함으로 충분).
  * ★ 30일보다 오래된 알림은 목록에서만 숨기고, 삭제하지는 않습니다.
  */
@@ -116,6 +116,8 @@ export function showBrowserNotification({ title, body, link }) {
 
 // 시작 작업(startup.js)이 부름: 오늘 체크리스트를 새로 만들었을 때
 export async function notifyChecklistCreated(plant, checklist) {
+  // 안전장치: 지금 로그인한 계정의 식물이 아니면(이전 계정 작업이 늦게 끝난 경우) 알림을 만들지 않음
+  if (!isMyPlant(plant?.id)) return;
   const { remaining } = summarize(checklist);
   const created = await createNotification({
     key: `CHECKLIST_${today()}_${plant.id}`,
@@ -138,7 +140,9 @@ export async function notifyChecklistCreated(plant, checklist) {
 export async function notifyReportCreated({ plantId, month }) {
   const id = typeof plantId === 'string' ? plantId : (plantId?.id ?? '');
   const plant = (store.get('plants') ?? []).find((p) => p.id === id);
-  const name = plant?.name ?? '내 식물';
+  // 안전장치: 지금 로그인한 계정의 식물이 아니면 알림을 만들지 않음
+  if (!plant) return;
+  const name = plant.name ?? '내 식물';
   const monthNum = Number(month?.slice(5)) || 0;
   const body = '함께한 달의 기록을 정리했어요. 쉴 때 편하게 읽어 보세요.';
   const created = await createNotification({
@@ -158,6 +162,11 @@ export async function notifyReportCreated({ plantId, month }) {
 }
 
 // ───────── 작은 도우미 ─────────
+
+// 지금 로그인한 계정의 식물 목록(store 'plants')에 있는 식물인지
+function isMyPlant(plantId) {
+  return Boolean(plantId) && (store.get('plants') ?? []).some((p) => p.id === plantId);
+}
 
 // 마지막 음절의 받침(종성)이 있는지 정확히 계산:
 // 한글 음절 코드 = AC00 + (초성×21 + 중성)×28 + 종성 → 28 로 나눈 나머지가 0 이면 받침 없음

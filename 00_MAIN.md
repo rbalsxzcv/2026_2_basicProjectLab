@@ -49,12 +49,13 @@ plant-coach/
 ├─ firestore.rules            # Firestore security rules                        [C1]
 ├─ firebase.json              # (optional) Firebase Hosting, public="public"   [C1]
 ├─ docs/  SPEC.md (team) · PROGRESS.md [C1] · vibe/ (these guides)
+├─ manual/                    # setup & run manuals (Firebase, App Check, deploy…) — no setup notes in code comments
 └─ public/                    # everything the browser runs
    ├─ index.html              # ★ app shell                                     [C1]
    ├─ css/ base.css · components.css [C1] · pages/<page>.css (each page task)
    ├─ assets/characters/      # default.svg [C4], deco-*.svg [C6]
    ├─ data/ plant-species.json [C4] · regions.json [C3] · daily-tasks.json [C5]
-   ├─ prompts/                # AI templates *.v1.txt + README.md               [C2]
+   ├─ prompts/                # AI templates *.v1.txt (rules: root README.md)  [C2]
    │  └─ samples/*-input.json # prompt-lab sample inputs                        [P2]
    ├─ mocks/*.json            # fake AI responses for mock mode                 [C2]
    └─ js/
@@ -76,7 +77,7 @@ plant-coach/
       ├─ services/              # Firestore access ONLY here
       │  ├─ auth.js · users.js [C3] · species.js · images.js · plants.js [C4]
       │  ├─ schedules.js [C4 create, C5 extend] · game.js [C6]
-      │  ├─ aiHistory.js · environments.js · photos.js [C5]
+      │  ├─ aiHistory.js · environments.js · photos.js · dev-tools.js (#/dev only) [C5]
       │  ├─ checklists.js [C5 stub → P3] · notifications.js [C5 stub → P4] · reports.js [C5 stub → P6]
       │  └─ diagnosis.js [P1]
       └─ pages/                 # one screen = one file
@@ -330,7 +331,7 @@ Pages only **read/call** these, never modify:
 | `services/notifications.js` | P4 (C) | replace stub (keep shapes) |
 | `services/reports.js` | P6 (D) | replace stub (keep shapes) |
 | `prompts/<name>.v*.txt`, `mocks/<name>*.json` | owner per table below | wording only; keep response keys/shapes |
-| `prompts/README.md`, `prompts/samples/**` | P2 (B) | procedure, record table, samples |
+| root `README.md` "프롬프트 템플릿 관리" section, `prompts/samples/**` | P2 (B) | procedure, record table, samples |
 | `pages/dev-ui.js` | every page task | only inside its own `[Pn]` section |
 | `docs/PROGRESS.md` | everyone | append own entries only |
 | Any other Common file | A only | bug fixes / approved contract changes on `main` |

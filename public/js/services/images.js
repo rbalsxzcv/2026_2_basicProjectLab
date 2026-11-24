@@ -20,10 +20,7 @@ export async function prepareImageForSave(dataUrl) {
   if (typeof dataUrl !== 'string' || !dataUrl.startsWith('data:')) return dataUrl;
 
   if (IMAGE_STORAGE_MODE === 'storage') {
-    // TODO(Blaze 요금제를 쓰게 되면): Cloud Storage 에 업로드하고 다운로드 URL 을 반환
-    //   1) core/firebase.js 에 firebase-storage 모듈 추가 (getStorage, ref, uploadString, getDownloadURL)
-    //   2) uploadString(ref(storage, `users/${uid}/photos/${id}.jpg`), dataUrl, 'data_url')
-    //   3) return await getDownloadURL(...)
+    // 아직 구현 안 함 (Blaze 요금제 필요). 바꾸는 방법: manual/07-extensions.md
     throw new Error('storage 모드는 아직 준비되지 않았어요');
   }
 

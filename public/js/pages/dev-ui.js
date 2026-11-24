@@ -2,7 +2,8 @@
  * 파일: public/js/pages/dev-ui.js
  * 역할: 개발용 테스트 화면 (#/dev) — 공용 UI, AI·날씨, 공용 테스트 버튼, 페이지별 테스트 구역, 게임 테스트
  * 사용하는 파일: ui/components.js, ui/celebrate.js, core/ai.js, core/weather.js, core/ai-config.js, ai/usage.js,
- *               services/plants.js, services/game.js, services/dev-tools.js, utils/dom.js, utils/date.js
+ *               services/(plants, game, checklists, notifications, species, environments, aiHistory, reports, dev-tools).js,
+ *               utils/(dom, date, image, envScore).js
  * 담당: C1 (공용 UI) · C2 (AI) · C5 (공용 테스트 + 페이지 구역) · C6 (게임 테스트)
  *
  * ★ 배포할 때는 core/routes.js 에서 '/dev' 줄을 지우세요. (개발용 화면)
@@ -36,8 +37,23 @@ import {
 import { getWeather } from '../core/weather.js';
 import { getCurrentPlant } from '../services/plants.js';
 import { awardExp, markCared, setAlert, refreshPlantState } from '../services/game.js';
-import { devSetScheduleDueDate, devDeleteChecklist, devDumpPlant } from '../services/dev-tools.js';
-import { today, addDays } from '../utils/date.js';
+import { ensureTodayChecklist } from '../services/checklists.js';
+import { markAllRead, notifyChecklistCreated, notifyReportCreated } from '../services/notifications.js';
+import { getSpecies, speciesProfile } from '../services/species.js';
+import { saveEnvironment } from '../services/environments.js';
+import { addHistory } from '../services/aiHistory.js';
+import { computeMonthlyStats, generateReport } from '../services/reports.js';
+import { calcMatchScore, ruleBasedTips, LIGHT_LABEL } from '../utils/envScore.js';
+import {
+  devSetScheduleDueDate,
+  devDeleteChecklist,
+  devDumpPlant,
+  devDeletePhotosOn,
+  devCreateSampleMonth,
+  devClearSamples,
+  devDeleteReport,
+} from '../services/dev-tools.js';
+import { today, addDays, thisMonth, prevMonth } from '../utils/date.js';
 import { fileToDataUrl } from '../utils/image.js';
 
 // ───────── 작은 도우미 ─────────
@@ -387,12 +403,38 @@ function renderGameSection(root) {
 
 // ===== [P1] 성장 캘린더 테스트 — P1 담당자만 수정 =====
 function renderP1Section(root) {
-  root.innerHTML = html`<h2 class="dev-title">📅 [P1] 성장 캘린더</h2><p class="muted">P1 담당자가 테스트 버튼을 추가해요.</p>`;
+  if (!store.get('user')) {
+    root.innerHTML = html`<h2 class="dev-title">📅 [P1] 성장 캘린더</h2>${loggedOutNote}`;
+    return;
+  }
+  root.innerHTML = html`
+    <h2 class="dev-title">📅 [P1] 성장 캘린더</h2>
+    <p class="muted">사진 진단 mock 은 diagnose-1(정상) / diagnose-2(관찰 필요) 중 하나를 무작위로 사용해요.</p>
+    <div class="row dev-wrap">
+      <button type="button" class="btn btn-secondary btn-sm" data-p1-delete>오늘 사진 기록 지우기</button>
+      <a class="btn btn-primary btn-sm" href="#/calendar">성장 캘린더 열기</a>
+    </div>
+  `;
+  on(root, 'click', '[data-p1-delete]', async () => {
+    const plant = requirePlant();
+    if (!plant) return;
+    if (!(await confirmModal('오늘 사진 기록을 모두 지울까요? 하루 사진 경험치 테스트를 다시 할 수 있어요.'))) return;
+    try {
+      const count = await devDeletePhotosOn(plant.id, today());
+      toast(count ? `오늘 사진 ${count}장을 지웠어요.` : '오늘 사진 기록이 없어요.', 'success');
+    } catch (error) {
+      toast(error.message || '사진 기록을 지우지 못했어요.', 'error');
+    }
+  });
 }
 
 // ===== [P2] 프롬프트 실험실 테스트 — P2 담당자만 수정 =====
 function renderP2Section(root) {
-  root.innerHTML = html`<h2 class="dev-title">🧫 [P2] 프롬프트 실험실</h2><p class="muted">P2 담당자가 테스트 버튼을 추가해요.</p>`;
+  root.innerHTML = html`
+    <h2 class="dev-title">🧫 [P2] 프롬프트 실험실</h2>
+    <p class="muted">템플릿 버전을 비교하고 응답 JSON 모양을 확인해요.</p>
+    <a class="btn btn-primary btn-sm" href="#/prompt-lab">프롬프트 실험실 열기</a>
+  `;
 }
 
 // ===== [P3] 체크리스트 테스트 — P3 담당자만 수정 =====
@@ -424,8 +466,6 @@ function renderP3Section(root) {
         } catch {
           /* 아직 없으면 그냥 만듦 */
         }
-        // 공유 import 줄을 건드리지 않으려고 여기서만 동적 import
-        const { ensureTodayChecklist } = await import('../services/checklists.js');
         const { checklist, created } = await ensureTodayChecklist(current);
         showJson(pre, { created, generatedBy: checklist?.generatedBy, items: checklist?.items });
         toast(created ? '오늘 체크리스트를 다시 만들었어요' : '오늘 체크리스트가 이미 있었어요', 'success');
@@ -451,7 +491,7 @@ function renderP4Section(root) {
     <h2 class="dev-title">🔔 [P4] 알림</h2>
     <p class="muted">현재 식물 기준으로 테스트해요. 결과는 <a href="#/notifications">알림함</a>에서 확인하세요.</p>
     <div class="row dev-wrap">
-      <button type="button" class="btn btn-secondary btn-sm" data-p4="clear">알림 모두 지우기</button>
+      <button type="button" class="btn btn-secondary btn-sm" data-p4="clear">알림 모두 읽음 처리</button>
       <button type="button" class="btn btn-secondary btn-sm" data-p4="test">테스트 알림 만들기(체크리스트·리포트 각 1개)</button>
     </div>
     <pre class="dev-pre" data-p4-result></pre>
@@ -464,14 +504,9 @@ function renderP4Section(root) {
     try {
       const act = el.dataset.p4;
       if (act === 'clear') {
-        // 공유 import 줄을 건드리지 않으려고 여기서만 동적 import
-        const { markAllRead } = await import('../services/notifications.js');
         await markAllRead();
-        toast('모든 알림을 읽음으로 바꾸어요', 'success');
+        toast('모든 알림을 읽음으로 바꿨어요', 'success');
       } else if (act === 'test') {
-        const { notifyChecklistCreated, notifyReportCreated } = await import('../services/notifications.js');
-        const { ensureTodayChecklist } = await import('../services/checklists.js');
-        const { prevMonth, thisMonth } = await import('../utils/date.js');
         const { checklist } = await ensureTodayChecklist(current);
         await notifyChecklistCreated(current, checklist);
         const reportMonth = prevMonth(thisMonth());
@@ -488,12 +523,162 @@ function renderP4Section(root) {
 
 // ===== [P5] 환경 분석 테스트 — P5 담당자만 수정 =====
 function renderP5Section(root) {
-  root.innerHTML = html`<h2 class="dev-title">☀️ [P5] 환경 분석</h2><p class="muted">P5 담당자가 테스트 버튼을 추가해요.</p>`;
+  if (!store.get('user')) {
+    root.innerHTML = html`<h2 class="dev-title">☀️ [P5] 환경 분석</h2>${loggedOutNote}`;
+    return;
+  }
+
+  root.innerHTML = html`
+    <h2 class="dev-title">☀️ [P5] 환경 분석</h2>
+    <p class="muted">카메라 없이 가짜 조도(lux 300 / 2,000 / 20,000)로 점수·AI 조언·저장을 한 번에 시험해요.</p>
+    <div class="row dev-wrap">
+      <button type="button" class="btn btn-secondary btn-sm" data-p5-lux="300">가짜 측정값 분석 (300 lux · 부족)</button>
+      <button type="button" class="btn btn-secondary btn-sm" data-p5-lux="2000">가짜 측정값 분석 (2,000 lux · 적정)</button>
+      <button type="button" class="btn btn-secondary btn-sm" data-p5-lux="20000">가짜 측정값 분석 (20,000 lux · 높음)</button>
+      <a class="btn btn-primary btn-sm" href="#/environment">환경 분석 화면 열기</a>
+    </div>
+    <pre class="dev-pre" data-p5-result></pre>
+  `;
+
+  const pre = root.querySelector('[data-p5-result]');
+  on(root, 'click', '[data-p5-lux]', async (event, btn) => {
+    const current = requirePlant();
+    if (!current) return;
+    const lux = Number(btn.dataset.p5Lux);
+    pre.textContent = '분석 중…';
+
+    try {
+      const species = await getSpecies(current.speciesId);
+      const region = store.get('user')?.home?.region || '서울특별시';
+      const homeType = store.get('user')?.home?.homeType || null;
+      let weather = null;
+      try {
+        weather = await getWeather(region);
+      } catch {
+        weather = null;
+      }
+
+      const scored = calcMatchScore({
+        lux,
+        weather,
+        heaterOrAcExposed: false,
+        windowDir: '남향',
+        species,
+      });
+
+      let coach;
+      let isFallback = false;
+      try {
+        coach = await analyzeEnvironment({
+          speciesName: species?.name ?? current.name,
+          profile: speciesProfile(species),
+          measuredLux: lux,
+          weather,
+          homeType,
+          windowDir: '남향',
+          heaterOrAcExposed: false,
+        });
+      } catch {
+        coach = ruleBasedTips({
+          lux,
+          lightLevel: scored.lightLevel,
+          weather,
+          heaterOrAcExposed: false,
+          windowDir: '남향',
+          species,
+        });
+        isFallback = true;
+      }
+
+      await saveEnvironment(current.id, {
+        measuredLux: lux,
+        luxSource: 'manual',
+        weather,
+        windowDir: '남향',
+        heaterOrAcExposed: false,
+        matchScore: scored.score,
+        lightLevel: scored.lightLevel,
+        coach,
+      });
+      await addHistory(current.id, 'ENVIRONMENT', {
+        lux,
+        lightLevel: scored.lightLevel,
+        score: scored.score,
+        humidity: weather?.humidity ?? null,
+        tips: coach.actions.join(' / '),
+      });
+
+      showJson(pre, {
+        measuredLux: lux,
+        score: scored.score,
+        lightLabel: LIGHT_LABEL[scored.lightLevel],
+        breakdown: scored.breakdown,
+        isFallback,
+        coach,
+      });
+      toast(`가짜 측정(${lux} lux) 분석 및 저장 완료`, 'success');
+    } catch (error) {
+      console.warn('[dev][P5] 테스트 실패', error);
+      pre.textContent = `실패: ${error.message}`;
+    }
+  });
 }
 
 // ===== [P6] 월간 리포트 테스트 — P6 담당자만 수정 =====
 function renderP6Section(root) {
-  root.innerHTML = html`<h2 class="dev-title">📄 [P6] 월간 리포트</h2><p class="muted">P6 담당자가 테스트 버튼을 추가해요.</p>`;
+  if (!store.get('user')) {
+    root.innerHTML = html`<h2 class="dev-title">📄 [P6] 월간 리포트</h2>${loggedOutNote}`;
+    return;
+  }
+
+  root.innerHTML = html`
+    <h2 class="dev-title">📄 [P6] 월간 리포트</h2>
+    <p class="muted">P3 없이도 리포트를 시험할 수 있도록 지난달 샘플 기록을 만들고 지웁니다.</p>
+    <div class="row dev-wrap">
+      <button type="button" class="btn btn-secondary btn-sm" data-p6="make-sample">지난달 샘플 기록 만들기</button>
+      <button type="button" class="btn btn-secondary btn-sm" data-p6="clear-sample">샘플 기록 지우기</button>
+      <button type="button" class="btn btn-secondary btn-sm" data-p6="force-report">지난달 리포트 강제 생성</button>
+      <button type="button" class="btn btn-ghost btn-sm" data-p6="delete-report">지난달 리포트 지우기</button>
+      <a class="btn btn-primary btn-sm" href="#/report">리포트 화면 열기</a>
+    </div>
+    <pre class="dev-pre" data-p6-result></pre>
+  `;
+
+  const pre = root.querySelector('[data-p6-result]');
+
+  on(root, 'click', '[data-p6]', async (event, btn) => {
+    const current = requirePlant();
+    if (!current) return;
+    const act = btn.dataset.p6;
+    pre.textContent = '처리 중…';
+
+    try {
+      const lastMonth = prevMonth(thisMonth());
+
+      if (act === 'make-sample') {
+        const created = await devCreateSampleMonth(current.id, lastMonth);
+        const stats = await computeMonthlyStats(current.id, lastMonth);
+        showJson(pre, { month: lastMonth, ...created, stats });
+        toast(`${lastMonth} 샘플 기록을 만들었어요`, 'success');
+      } else if (act === 'clear-sample') {
+        const deleted = await devClearSamples(current.id);
+        showJson(pre, { deletedSampleDocs: deleted });
+        toast(`샘플 기록 ${deleted}개를 지웠어요`, 'success');
+      } else if (act === 'force-report') {
+        await devDeleteReport(current.id, lastMonth);
+        const report = await generateReport(current, lastMonth);
+        showJson(pre, report);
+        toast(`${lastMonth} 리포트를 생성했어요`, 'success');
+      } else if (act === 'delete-report') {
+        await devDeleteReport(current.id, lastMonth);
+        pre.textContent = `${lastMonth} 리포트를 삭제했어요.`;
+        toast(`${lastMonth} 리포트를 지웠어요`, 'success');
+      }
+    } catch (error) {
+      console.warn('[dev][P6] 테스트 실패', error);
+      pre.textContent = `실패: ${error.message}`;
+    }
+  });
 }
 
 // 구역 목록 (위에서부터 순서대로 그림)

@@ -8,14 +8,7 @@
  *   예) import { db, doc, getDoc } from '../core/firebase.js';
  *   그래서 CDN 주소와 SDK 버전은 이 파일 한 곳에만 있습니다.
  *
- * ───────── App Check 디버그 토큰 등록 방법 (localhost 테스트용, 사람마다 한 번) ─────────
- * 1) firebase-config.js 에 appCheckSiteKey 를 넣고 http://localhost:5500 으로 앱을 엽니다.
- * 2) 브라우저 개발자 도구(F12) → Console 에
- *    "App Check debug token: xxxxxxxx-xxxx-..." 문장이 찍힙니다. 그 토큰을 복사합니다.
- * 3) Firebase 콘솔 → [App Check] → [앱] 탭 → 내 웹 앱 오른쪽 ⋮ → [디버그 토큰 관리]
- *    → [디버그 토큰 추가] 에 붙여 넣고 저장합니다.
- * 4) 브라우저(또는 시크릿 창)마다 토큰이 다르므로, 팀원 각자 자기 토큰을 등록해야 합니다.
- *    디버그 토큰은 비밀번호처럼 다루고 Git이나 채팅방에 올리지 마세요.
+ * localhost 에서 AI real 모드를 쓰려면 App Check 디버그 토큰 등록이 필요합니다 → manual/03-real-ai-mode.md
  */
 
 // SDK 버전은 여기 한 곳에서만 바꿉니다. (공식 CDN 예제: https://firebase.google.com/docs/web/alt-setup)
@@ -67,7 +60,7 @@ import {
   ReCaptchaV3Provider,
 } from 'https://www.gstatic.com/firebasejs/13.3.0/firebase-app-check.js';
 
-import { firebaseConfig, appCheckSiteKey, isFirebaseConfigured } from './firebase-config.js';
+import { firebaseConfig, appCheckSiteKey, appCheckDebugToken, isFirebaseConfigured } from './firebase-config.js';
 
 // 설정이 비어 있으면 null 로 두고, app.js 가 설정 안내 화면을 보여 줍니다.
 let app = null;
@@ -81,9 +74,13 @@ if (isFirebaseConfigured) {
   // ── App Check: AI를 쓰기 "전에" 먼저 켜야 합니다 ──
   if (appCheckSiteKey) {
     try {
-      // localhost 에서는 reCAPTCHA 대신 디버그 토큰을 씁니다. (위 주석의 등록 방법 참고)
-      if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-        self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+      // 배포 주소가 아니면(localhost, 내부 IP 등) reCAPTCHA 대신 디버그 토큰을 씁니다.
+      //  - appCheckDebugToken(firebase-config.js) 이 있으면 그 고정 토큰 사용
+      //    → 콘솔에 한 번만 등록하면 어느 PC·브라우저에서도, 사이트 데이터를 지워도 계속 동작
+      //  - 비어 있으면 브라우저마다 임의 토큰 생성 (콘솔에 찍힌 토큰을 Firebase 에 등록해야 함)
+      const isDeployed = /\.(web\.app|firebaseapp\.com)$/.test(location.hostname);
+      if (!isDeployed) {
+        self.FIREBASE_APPCHECK_DEBUG_TOKEN = appCheckDebugToken || true;
       }
       initializeAppCheck(app, {
         provider: new ReCaptchaV3Provider(appCheckSiteKey),

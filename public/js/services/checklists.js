@@ -8,7 +8,7 @@
  *               services/environments.js, services/species.js, utils/date.js
  * 담당: P3
  *
- * ★ 함수 이름·인자·반환 형식은 C5 뼈대 그대로 유지 (main.js, startup.js 가 사용).
+ * ★ 함수 이름·인자·반환 형식은 00_MAIN §5 계약 그대로 유지 (main.js, startup.js, notifications.js 가 사용).
  */
 
 import { db, doc, getDoc, runTransaction, serverTimestamp } from '../core/firebase.js';
@@ -37,8 +37,14 @@ function currentUid() {
   return uid;
 }
 
-function checklistRef(plantId, date) {
-  return doc(db, 'users', currentUid(), 'plants', plantId, 'checklists', date);
+// uid: 오래 걸리는 작업은 "시작할 때의 계정"을 넘겨서, 중간에 계정이 바뀌어도 엉뚱한 계정에 쓰지 않게 함
+function checklistRef(plantId, date, uid = currentUid()) {
+  return doc(db, 'users', uid, 'plants', plantId, 'checklists', date);
+}
+
+// 작업 도중 로그아웃·다른 계정 로그인이 일어났는지
+function accountChanged(uid) {
+  return store.get('user')?.uid !== uid;
 }
 
 let dailyTasksPromise = null;
@@ -82,7 +88,9 @@ export async function getChecklist(plantId, date = today()) {
 }
 
 // 오늘 체크리스트가 없으면 만들기. 반환: { checklist, created }
+// ★ AI 호출이 몇 초 걸리므로, 그 사이 계정이 바뀌면 저장하지 않고 { checklist: null, created: false } 반환
 export async function ensureTodayChecklist(plant) {
+  const uid = currentUid(); // 시작 시점의 계정에 고정
   const date = today();
   const existing = await getChecklist(plant.id, date);
   if (existing) return { checklist: existing, created: false };
@@ -113,8 +121,11 @@ export async function ensureTodayChecklist(plant) {
 
   const data = { items: [...periodicItems, ...dailyItems], generatedBy, createdAt: serverTimestamp() };
 
+  // AI 를 기다리는 사이 다른 계정으로 바뀌었으면 여기서 중단 (이전 계정 식물이 새 계정에 섞이는 문제 방지)
+  if (accountChanged(uid)) return { checklist: null, created: false };
+
   // 3) 트랜잭션 안에서 "없을 때만" 만들기 → 여러 탭에서 동시에 열어도 하루에 한 번만 생김
-  const ref = checklistRef(plant.id, date);
+  const ref = checklistRef(plant.id, date, uid);
   const result = await runTransaction(db, async (tx) => {
     const snap = await tx.get(ref);
     if (snap.exists()) return { checklist: { id: snap.id, ...snap.data() }, created: false };
@@ -123,7 +134,7 @@ export async function ensureTodayChecklist(plant) {
   });
 
   // 4) 새로 만들었을 때만 분석 요약 기록 (실패해도 치명적이지 않음)
-  if (result.created) {
+  if (result.created && !accountChanged(uid)) {
     try {
       await addHistory(plant.id, 'CHECKLIST', {
         titles: [...periodicItems, ...dailyItems].map((i) => i.title),

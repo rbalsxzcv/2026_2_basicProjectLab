@@ -290,6 +290,11 @@
   margin-bottom: var(--space-4);
 }
 
+/* 문구 속 줄바꿈(\n)을 그대로 보여 줌 (예: 진단 질문, "팁\n\n다 했나요?") */
+.modal-body p {
+  white-space: pre-line;
+}
+
 /* 모달 버튼 영역 (버튼은 세로로 쌓임) */
 .modal-actions {
   display: flex;
