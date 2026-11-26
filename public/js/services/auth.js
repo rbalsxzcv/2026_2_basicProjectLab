@@ -2,9 +2,8 @@
  * 파일: public/js/services/auth.js
  * 역할: 아이디+비밀번호 회원가입 / 로그인 / 로그아웃 / 비밀번호 변경, 오류 문구 변환
  * 사용하는 파일: core/firebase.js, core/store.js, core/router.js, services/users.js
- * 담당: C3
  *
- * ★ 아이디 → 이메일 변환(toAuthEmail)은 이 파일에만 있습니다. (00_MAIN §5.9)
+ * ★ 아이디 → 이메일 변환(toAuthEmail)은 이 파일에만 있습니다.
  *   Firebase Authentication 은 이메일이 필요해서 'abc' → 'abc@plantcoach.example' 로 바꿔 씁니다.
  *   (.example 은 실제로 쓰이지 않는 예약 도메인이라 메일이 가지 않습니다)
  */

@@ -2,7 +2,6 @@
  * 파일: public/js/services/images.js
  * 역할: 이미지 저장 방식을 한곳에서 결정 (지금은 압축한 data URL 을 Firestore 에 직접 저장)
  * 사용하는 파일: utils/image.js
- * 담당: C4
  *
  * ★ 다른 파일은 사진을 저장하기 전에 반드시 prepareImageForSave(dataUrl) 만 부릅니다.
  *   나중에 Cloud Storage 로 바꾸더라도 이 파일만 고치면 됩니다.
@@ -20,7 +19,7 @@ export async function prepareImageForSave(dataUrl) {
   if (typeof dataUrl !== 'string' || !dataUrl.startsWith('data:')) return dataUrl;
 
   if (IMAGE_STORAGE_MODE === 'storage') {
-    // 아직 구현 안 함 (Blaze 요금제 필요). 바꾸는 방법: manual/07-extensions.md
+    // 아직 구현 안 함 (Blaze 요금제 필요). 바꾸는 방법: README "확장 아이디어"
     throw new Error('storage 모드는 아직 준비되지 않았어요');
   }
 

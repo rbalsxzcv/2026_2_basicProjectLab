@@ -2,7 +2,6 @@
  * 파일: public/js/utils/envScore.js
  * 역할: AI 없이 규칙 기반으로 환경 적합도 점수(0~100)와 기본 조언을 계산
  * 사용하는 파일: 없음
- * 담당: P5
  */
 
 export const LIGHT_LABEL = {

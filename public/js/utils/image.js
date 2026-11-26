@@ -2,7 +2,6 @@
  * 파일: public/js/utils/image.js
  * 역할: 사진 파일을 작게 줄여 data URL(글자로 된 이미지)로 바꾸기
  * 사용하는 파일: 없음
- * 담당: C4
  *
  * ★ Firestore 문서 하나는 1MB 를 넘을 수 없습니다. 저장 전에는 꼭 shrinkDataUrl 을 거치세요.
  *   (보통은 services/images.js 의 prepareImageForSave 가 대신 해 줍니다)

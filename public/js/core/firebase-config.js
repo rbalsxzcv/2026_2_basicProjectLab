@@ -2,9 +2,8 @@
  * 파일: public/js/core/firebase-config.js
  * 역할: Firebase 웹 앱 설정값과 App Check 사이트 키를 한곳에 모아 둠
  * 사용하는 파일: core/firebase.js, app.js
- * 담당: C1
  *
- * 값 넣는 방법: manual/02-firebase-setup.md, App Check 사이트 키: manual/03-real-ai-mode.md
+ * 값 넣는 방법: README "Firebase 프로젝트", App Check 사이트 키: README "실제 AI(real) 모드"
  * ※ 이 값들은 공개되어도 괜찮은 값입니다. 데이터 보호는 firestore.rules 와 App Check 가 담당합니다.
  *   (reCAPTCHA "비밀 키"는 절대 여기에 넣지 않습니다. 디버그 토큰은 편의를 위해 의도적으로 넣어 둠 — 아래 설명 참고)
  */

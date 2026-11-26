@@ -2,7 +2,7 @@
  * 파일: public/js/ui/celebrate.js
  * 역할: 레벨업 축하 모달, 버튼 위로 떠오르는 "+20 EXP" 글자
  * 사용하는 파일: ui/components.js, utils/dom.js, services/plants.js (기본 캐릭터 경로)
- * 담당: C6 — 공통 완료 후 이름·인자·반환 형식 동결 (P1 캘린더, P3 체크리스트가 사용)
+ * 사용하는 곳: 성장 캘린더(사진 진단), 체크리스트, 메인 화면
  *
  * 사용 예)
  *   const result = await awardExp(plant.id, EXP.PERIODIC, 'WATER');

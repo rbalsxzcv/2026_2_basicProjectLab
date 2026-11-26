@@ -1,4 +1,4 @@
-# 줄바꿈 통일: 저장소에는 항상 LF 로 저장 (Windows/Mac 팀원 사이 diff·머지 충돌 방지)
+# 줄바꿈 통일: 저장소에는 항상 LF 로 저장 (Windows/Mac 사이 diff·머지 충돌 방지)
 * text=auto
 *.png binary
 *.jpg binary

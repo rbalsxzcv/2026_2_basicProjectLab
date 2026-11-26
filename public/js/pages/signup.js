@@ -2,7 +2,6 @@
  * 파일: public/js/pages/signup.js
  * 역할: 회원가입 화면 (#/signup) — 아이디, 비밀번호, 닉네임, 거주지역, 자택 종류
  * 사용하는 파일: services/auth.js, ui/components.js, utils/dom.js, public/data/regions.json
- * 담당: C3
  *
  * ★ 가입에 성공하면 app.js 의 로그인 감시가 다음 화면(식물 등록)으로 보냅니다.
  */

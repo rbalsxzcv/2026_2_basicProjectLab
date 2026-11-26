@@ -1,8 +1,7 @@
 /**
  * 파일: public/js/utils/date.js
- * 역할: 한국 시간(Asia/Seoul) 기준 날짜 계산 도우미 (00_MAIN §5.8)
+ * 역할: 한국 시간(Asia/Seoul) 기준 날짜 계산 도우미
  * 사용하는 파일: 없음
- * 담당: C1
  *
  * ★ 날짜는 항상 'YYYY-MM-DD' 문자열, 월은 'YYYY-MM' 문자열로 다룹니다.
  * ★ new Date().toISOString().slice(0, 10) 은 절대 쓰지 마세요.

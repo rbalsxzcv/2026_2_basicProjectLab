@@ -3,7 +3,6 @@
  * 역할: 앱 시작점 — Firebase 설정 확인 → 셸 그리기 → 로그인 상태 감시 → 라우터 시작
  * 사용하는 파일: core/firebase-config.js, core/firebase.js, core/router.js, core/store.js,
  *               core/startup.js, ui/layout.js, ui/components.js
- * 담당: C1
  */
 
 import { isFirebaseConfigured } from './core/firebase-config.js';
@@ -42,7 +41,7 @@ function renderSetupGuide(container) {
         <li>Firestore 를 만들고 <code>firestore.rules</code> 내용을 규칙 탭에 게시해요.</li>
         <li>저장하고 이 화면을 새로고침해요.</li>
       </ol>
-      <p class="card-sub">자세한 방법은 저장소의 <code>manual/02-firebase-setup.md</code> 에 있어요.</p>
+      <p class="card-sub">자세한 방법은 저장소 <code>README.md</code> 의 "Firebase 프로젝트" 절에 있어요.</p>
       <a class="btn btn-secondary" href="#/dev">Firebase 없이 공용 UI 시험해 보기 (#/dev)</a>
     </section>
   `;

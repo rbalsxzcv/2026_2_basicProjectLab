@@ -3,10 +3,9 @@
  * 역할: 프롬프트 실험실 (#/prompt-lab) — 템플릿·입력·버전을 골라 실행하고, 응답 모양 검사·버전 비교·결과 내려받기
  * 사용하는 파일: ai/prompts.js, ai/provider.js, ai/normalize.js, ai/usage.js, core/ai-config.js,
  *               ui/components.js, utils/dom.js, utils/image.js, public/prompts/samples/*-input.json
- * 담당: P2
  *
- * ★ 개발용 화면이에요. 배포 전 core/routes.js 에서 제거합니다.
- * ★ 시험 도구라서 예외로 ai/provider.js · ai/prompts.js 를 직접 부릅니다. (00_MAIN 규칙 4 예외)
+ * ★ 개발용 화면이에요. 메뉴에는 없고 주소(#/prompt-lab)로만 들어옵니다.
+ * ★ 시험 도구라서 예외로 ai/provider.js · ai/prompts.js 를 직접 부릅니다.
  *   mock 모드는 템플릿 본문을 쓰지 않고 mocks/*.json 을 돌려주므로 화면·검사 흐름만 확인할 수 있어요.
  */
 
@@ -106,7 +105,7 @@ export default {
 
       container.innerHTML = html`
         <section class="prompt-lab stack">
-          <aside class="prompt-lab-note">개발용 화면이에요. 배포 전 routes에서 제거해요.</aside>
+          <aside class="prompt-lab-note">개발용 화면이에요. 앱 메뉴에는 나오지 않아요.</aside>
           <section class="prompt-lab-status">
             <strong>AI ${getAiMode()}</strong>
             <span>기본 버전 ${PROMPT_VERSION}</span>

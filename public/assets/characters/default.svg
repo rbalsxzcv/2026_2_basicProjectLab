@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="웃는 새싹 화분 캐릭터">
-  <!-- 기본 캐릭터: 사진이 없거나 캐릭터 만들기에 실패했을 때 사용 (C4) -->
+  <!-- 기본 캐릭터: 사진이 없거나 캐릭터 만들기에 실패했을 때 사용 -->
   <ellipse cx="100" cy="186" rx="54" ry="8" fill="#2F3A33" opacity="0.08"/>
   <!-- 줄기 -->
   <path d="M100 96 C 97 80, 98 66, 100 54" stroke="#3F8A57" stroke-width="5" fill="none" stroke-linecap="round"/>

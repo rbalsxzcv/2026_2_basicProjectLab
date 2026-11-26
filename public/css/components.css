@@ -1,7 +1,6 @@
 /*
  * 파일: public/css/components.css
  * 역할: ui/components.js 와 모든 페이지가 함께 쓰는 공용 컴포넌트 스타일
- * 담당: C1 (celebrate 관련은 C6)
  */
 
 /* ===== 버튼 ===== */
@@ -500,7 +499,7 @@ body.no-nav #toast-root {
   font-size: 13px;
 }
 
-/* ===== 레벨업 축하 (C6, ui/celebrate.js) ===== */
+/* ===== 레벨업 축하 (ui/celebrate.js) ===== */
 .celebrate {
   position: relative;
   display: flex;

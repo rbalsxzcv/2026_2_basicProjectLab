@@ -3,10 +3,9 @@
  * 역할: 메인 게임 화면 (#/main) — 캐릭터 표시, 식물 선택, 쓰다듬기, 레벨 바, 체크리스트 바로가기, 메뉴
  * 사용하는 파일: services/plants.js, services/game.js, services/checklists.js,
  *               ui/components.js, utils/dom.js, utils/date.js
- * 담당: C6
  *
  * ★ Anti-Guilt: 캐릭터는 절대 시들거나 슬퍼 보이지 않습니다. 밀린 일정은 "차분히 기다리는 중"으로만 표현.
- * ★ 체크리스트 완료 로직은 여기 없습니다(P3). 이 화면은 남은 개수만 보여 주고 이동만 합니다.
+ * ★ 체크리스트 완료 로직은 여기 없습니다(services/checklists.js). 이 화면은 남은 개수만 보여 주고 이동만 합니다.
  */
 
 import { html, on } from '../utils/dom.js';
@@ -247,7 +246,7 @@ export default {
         }, 2000);
       }
 
-      // 팀이 쓰다듬기 경험치를 정하면(EXP.PET > 0) 하루 3번까지 지급
+      // 쓰다듬기 경험치(EXP.PET)가 0보다 크면 하루 3번까지 지급 (지금은 0 = 반응만)
       if (EXP.PET > 0 && plant && canAwardPetExp(plant.id)) {
         awardExp(plant.id, EXP.PET, 'PET').catch((error) => console.warn('[main] 쓰다듬기 경험치 실패', error));
       }

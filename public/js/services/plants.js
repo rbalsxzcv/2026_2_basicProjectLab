@@ -3,7 +3,6 @@
  * 역할: 내 식물 목록 불러오기·선택·등록·수정·삭제 — users/{uid}/plants/{plantId}
  * 사용하는 파일: core/firebase.js, core/store.js, services/species.js, services/schedules.js,
  *               services/photos.js, utils/date.js
- * 담당: C4
  *
  * 식물 목록은 store 'plants' 에, 지금 보고 있는 식물 ID 는 store 'currentPlantId' 에 둡니다.
  */

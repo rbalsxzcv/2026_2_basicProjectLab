@@ -2,7 +2,6 @@
  * 파일: public/js/utils/dom.js
  * 역할: 안전한 HTML 만들기(html 템플릿, 자동 이스케이프)와 DOM 찾기·이벤트 도우미
  * 사용하는 파일: 없음
- * 담당: C1
  *
  * html 사용법:
  *   container.innerHTML = html`<p>${user.nickname}님</p>`;

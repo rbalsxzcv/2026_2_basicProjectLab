@@ -1,8 +1,7 @@
 /**
  * 파일: public/js/core/routes.js
- * 역할: 주소(#/경로) ↔ 페이지 파일 연결 표 (00_MAIN §5.2)
+ * 역할: 주소(#/경로) ↔ 페이지 파일 연결 표
  * 사용하는 파일: core/router.js
- * 담당: C1
  *
  * - ':id', ':month' 처럼 ':' 로 시작하는 부분은 변수입니다. (#/report/2026-10 → params.month = '2026-10')
  * - 라우터는 "칸 수가 같고, 고정된 글자가 더 많은 경로"를 먼저 고릅니다.
@@ -24,8 +23,8 @@ export const routes = [
   { path: '/report/:month', page: 'report.js' },
   { path: '/profile', page: 'profile.js' },
   { path: '/notifications', page: 'notifications.js' },
-  { path: '/dev', page: 'dev-ui.js' }, // 개발용 (배포 시 제거)
-  { path: '/prompt-lab', page: 'prompt-lab.js' }, // 개발용 (배포 시 제거)
+  { path: '/dev', page: 'dev-ui.js' }, // 개발용 화면 (메뉴에 없음)
+  { path: '/prompt-lab', page: 'prompt-lab.js' }, // 개발용 화면 (메뉴에 없음)
 ];
 
 export const DEFAULT_AUTHED = '/main';

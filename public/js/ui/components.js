@@ -1,8 +1,7 @@
 /**
  * 파일: public/js/ui/components.js
- * 역할: 모든 화면이 함께 쓰는 공용 UI (토스트, 모달, 선택 모달, 로딩, 게이지, 빈 화면) — 00_MAIN §5.7
+ * 역할: 모든 화면이 함께 쓰는 공용 UI (토스트, 모달, 선택 모달, 로딩, 게이지, 빈 화면)
  * 사용하는 파일: utils/dom.js, css/components.css
- * 담당: C1
  *
  * ★ 브라우저 기본 alert(), confirm(), prompt() 는 쓰지 말고 이 파일의 함수를 쓰세요.
  */

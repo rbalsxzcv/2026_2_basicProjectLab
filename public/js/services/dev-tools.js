@@ -1,10 +1,9 @@
 /**
  * 파일: public/js/services/dev-tools.js
- * 역할: #/dev 테스트 버튼 전용 Firestore 도우미 (개발용 — 배포 시 dev-ui.js 와 함께 제거)
+ * 역할: #/dev 테스트 버튼 전용 Firestore 도우미 (개발용)
  * 사용하는 파일: core/firebase.js, core/store.js, services/schedules.js, utils/date.js
- * 담당: C5 (공용) · P1 · P6 (각 구역 도우미)
  *
- * ※ 00_MAIN 규칙 3 "Firestore 는 services/ 에서만" 을 지키기 위해, 테스트 버튼이 쓰는 직접 쓰기 작업을
+ * ※ "Firestore 는 services/ 에서만" 규칙에 따라, 테스트 버튼이 쓰는 직접 쓰기 작업을
  *   이 파일에 모았습니다. 앱의 실제 화면은 이 파일을 쓰지 않습니다.
  */
 
@@ -35,7 +34,7 @@ function plantPath(plantId) {
   return ['users', currentUid(), 'plants', plantId];
 }
 
-// ───────── [C5] 공용 테스트 ─────────
+// ───────── 공용 테스트 ─────────
 
 // 일정 예정일을 원하는 날짜로 바꾸기 (예: 물주기 예정일을 오늘로)
 export async function devSetScheduleDueDate(plantId, taskType, dueDate) {
@@ -58,7 +57,7 @@ export async function devDumpPlant(plantId) {
   return { plant, schedules };
 }
 
-// ───────── [P1] 성장 캘린더 ─────────
+// ───────── 성장 캘린더 ─────────
 
 // 그날 사진 기록 모두 지우기 (하루 한 번 사진 경험치를 다시 시험할 때). 반환: 지운 개수
 export async function devDeletePhotosOn(plantId, date) {
@@ -67,7 +66,7 @@ export async function devDeletePhotosOn(plantId, date) {
   return snap.size;
 }
 
-// ───────── [P6] 월간 리포트 ─────────
+// ───────── 월간 리포트 ─────────
 
 function sampleItem(taskType, title, { exp, category, isCompleted, dateStr, dueDate = null, postponed = false }) {
   return {
@@ -85,7 +84,7 @@ function sampleItem(taskType, title, { exp, category, isCompleted, dateStr, dueD
 }
 
 /**
- * 지난달 샘플 기록 만들기 (P3 없이 리포트를 시험하기 위해) — 모든 문서에 sample: true
+ * 지난달 샘플 기록 만들기 (실제 체크리스트 기록 없이 리포트를 시험하기 위해) — 모든 문서에 sample: true
  * 체크리스트 약 20일치(완료·미완료·미룬 물주기 섞음) + 사진 3장 + aiHistory 4개
  * @returns {Promise<{ checklists: number, photos: number, aiHistory: number }>}
  */

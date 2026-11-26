@@ -2,7 +2,6 @@
  * 파일: public/js/services/schedules.js
  * 역할: 식물별 정기 관리 일정 (물주기, 비료, 잎 닦기, 분갈이) — plants/{id}/schedules/{taskType}
  * 사용하는 파일: core/firebase.js, core/store.js, utils/date.js
- * 담당: C4 (만들기·읽기) + C5 (예정일 계산·완료·연기)
  *
  * 문서 모양: { taskType, intervalDays, dueDate: 'YYYY-MM-DD', lastDoneAt: 'YYYY-MM-DD' | null }
  * 문서 ID = taskType (예: 'WATER') → 식물마다 딱 4개
@@ -38,7 +37,7 @@ function scheduleRef(plantId, taskType) {
   return doc(db, 'users', currentUid(), 'plants', plantId, 'schedules', taskType);
 }
 
-// ───────── C4: 만들기 · 읽기 ─────────
+// ───────── 만들기 · 읽기 ─────────
 
 // 식물을 등록할 때 4개 일정을 한 번에 만듭니다. dueDate = 시작일 + 간격
 export async function createInitialSchedules(plantId, species, startDate) {
@@ -63,7 +62,7 @@ export async function listSchedules(plantId) {
   return list.sort((a, b) => PERIODIC_TYPES.indexOf(a.taskType) - PERIODIC_TYPES.indexOf(b.taskType));
 }
 
-// ───────── C5: 예정일 계산 · 완료 · 연기 ─────────
+// ───────── 예정일 계산 · 완료 · 연기 ─────────
 // (일정은 식물마다 4개뿐이라 전부 읽은 뒤 브라우저에서 걸러도 충분히 빠릅니다)
 
 // 예정일이 date 이하인(오늘 할 차례이거나 지난) 일정

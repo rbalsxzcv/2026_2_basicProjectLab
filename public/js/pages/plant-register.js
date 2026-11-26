@@ -4,7 +4,6 @@
  *       종류 선택(목록에 없으면 AI로 새 종류 추가) → 별명 → 구입일 → (수명) → 사진 → AI 캐릭터 만들기 → 등록
  * 사용하는 파일: services/species.js, services/plants.js, services/images.js, core/ai.js,
  *               utils/image.js, utils/date.js, utils/dom.js, ui/components.js
- * 담당: C4
  */
 
 import { html, on } from '../utils/dom.js';

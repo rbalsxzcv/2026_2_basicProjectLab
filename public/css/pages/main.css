@@ -1,7 +1,6 @@
 /*
  * 파일: public/css/pages/main.css
  * 역할: 메인 게임 화면 스타일 — 캐릭터 무대, 상태별 애니메이션, 레벨 바, 체크리스트 카드, 메뉴
- * 담당: C6
  *
  * 상태별 표현 (Anti-Guilt: 시듦·울음·회색 처리 없음)
  *   PEACEFUL 좌우로 살랑 / WAITING 천천히 숨쉬기 + "…" / ALERT 옆에서 돋보기가 흔들 / GROWING 반짝이 + 통통

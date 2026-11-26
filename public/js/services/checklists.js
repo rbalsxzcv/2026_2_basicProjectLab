@@ -6,9 +6,8 @@
  * 사용하는 파일: core/firebase.js, core/store.js, core/ai.js, core/weather.js,
  *               services/schedules.js, services/game.js, services/aiHistory.js,
  *               services/environments.js, services/species.js, utils/date.js
- * 담당: P3
  *
- * ★ 함수 이름·인자·반환 형식은 00_MAIN §5 계약 그대로 유지 (main.js, startup.js, notifications.js 가 사용).
+ * 사용하는 곳: core/startup.js, pages/main.js, pages/checklist.js, services/notifications.js
  */
 
 import { db, doc, getDoc, runTransaction, serverTimestamp } from '../core/firebase.js';
@@ -60,7 +59,7 @@ async function loadDailyTasks() {
   return dailyTasksPromise;
 }
 
-// 00_MAIN §5.5 의 항목 모양 그대로
+// 체크리스트 항목 하나 (README "데이터 구조" 의 checklists.items)
 // id: 같은 taskType 이더라도 여러 항목이 생길 수 있으므로 짧은 랜덤 문자열 사용
 function shortId() {
   return Math.random().toString(36).slice(2, 8);
@@ -241,7 +240,7 @@ export async function completeItem(plantId, itemId, { soilMoistureDry = null } =
     // 1) 이미 완료된 항목
     if (item.isCompleted) return { status: 'already' };
 
-    // 2) 물주기인데 흙 상태를 아직 확인 안 했음(null) → 팝업 없이 완료되는 버그 방지
+    // 2) 물주기인데 흙 상태를 아직 확인 안 했음(null) → 흙 확인 팝업 없이는 완료할 수 없음 (Safe-Lock)
     if (item.taskType === 'WATER' && soilMoistureDry === null) {
       throw new Error('물주기 전에 흙 상태를 먼저 확인해 주세요.');
     }

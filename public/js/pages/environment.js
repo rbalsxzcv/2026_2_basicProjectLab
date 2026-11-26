@@ -4,7 +4,6 @@
  * 사용하는 파일: core/store.js, core/ai.js, core/weather.js, services/plants.js, services/species.js,
  *               services/environments.js, services/aiHistory.js, ui/components.js,
  *               utils/dom.js, utils/date.js, utils/lux.js, utils/envScore.js
- * 담당: P5
  */
 
 import { html, on } from '../utils/dom.js';

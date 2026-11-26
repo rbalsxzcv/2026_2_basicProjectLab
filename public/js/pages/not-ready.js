@@ -2,7 +2,6 @@
  * 파일: public/js/pages/not-ready.js
  * 역할: 아직 만들지 않은 화면, 또는 없는 주소일 때 보여 주는 "준비 중" 화면
  * 사용하는 파일: ui/components.js
- * 담당: C1
  */
 
 import { emptyState } from '../ui/components.js';

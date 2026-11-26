@@ -1,8 +1,7 @@
 /**
  * 파일: public/js/services/users.js
- * 역할: 회원정보 문서 users/{uid} 만들기·읽기·고치기 (00_MAIN §5.5)
+ * 역할: 회원정보 문서 users/{uid} 만들기·읽기·고치기
  * 사용하는 파일: core/firebase.js, core/store.js
- * 담당: C3
  *
  * ★ 비밀번호는 어디에도 저장하지 않습니다. (Firebase Authentication 이 따로 관리)
  */

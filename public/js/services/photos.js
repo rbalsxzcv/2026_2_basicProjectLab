@@ -2,7 +2,6 @@
  * 파일: public/js/services/photos.js
  * 역할: 식물 사진 기록 — plants/{id}/photos/{photoId}
  * 사용하는 파일: core/firebase.js, core/store.js, utils/date.js
- * 담당: C5
  *
  * 문서 모양: { image, date: 'YYYY-MM-DD', diagnosis: {...} | null, createdAt }
  * ★ image 는 저장 전에 services/images.js 의 prepareImageForSave 를 거친 값이어야 합니다.

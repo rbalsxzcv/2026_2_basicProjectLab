@@ -2,7 +2,6 @@
  * 파일: public/js/pages/report.js
  * 역할: 월간 리포트 화면 (#/report, #/report/:month) — 통계, 변화 추이, AI 칭찬·제안, 분갈이·수명 안내
  * 사용하는 파일: core/store.js, services/plants.js, services/reports.js, ui/components.js, utils/dom.js, utils/date.js
- * 담당: P6
  */
 
 import { html, on } from '../utils/dom.js';

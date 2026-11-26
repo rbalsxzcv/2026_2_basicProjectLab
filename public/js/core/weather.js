@@ -4,7 +4,6 @@
  *       - mock 모드: 월별 한국 평균값 + 약간의 무작위
  *       - real 모드: Open-Meteo (키가 필요 없는 공개 날씨 API)
  * 사용하는 파일: core/ai-config.js, utils/date.js, public/data/regions.json
- * 담당: C2
  *
  * Open-Meteo 공식 문서: https://open-meteo.com/en/docs
  *   요청 예) https://api.open-meteo.com/v1/forecast?latitude=37.57&longitude=126.98

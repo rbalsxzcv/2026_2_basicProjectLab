@@ -2,9 +2,8 @@
  * 파일: public/js/services/environments.js
  * 역할: 환경 측정 기록 — plants/{id}/environments/{envId}
  * 사용하는 파일: core/firebase.js, core/store.js
- * 담당: C5
  *
- * 문서 모양 (00_MAIN §5.5):
+ * 문서 모양:
  *   { measuredLux, luxSource: 'camera'|'sensor'|'manual', weather: { tempC, humidity, precipitation },
  *     windowDir, heaterOrAcExposed, matchScore, lightLevel: 'LOW'|'OK'|'HIGH',
  *     coach: { goodPoint, actions }, measuredAt }

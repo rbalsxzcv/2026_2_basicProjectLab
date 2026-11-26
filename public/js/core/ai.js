@@ -1,8 +1,7 @@
 /**
  * 파일: public/js/core/ai.js
- * 역할: ★ 앱이 부르는 AI 함수 6개 (00_MAIN §5.4) + 새 식물 종류 만들기(generateSpecies) + AiError
+ * 역할: ★ 앱이 부르는 AI 함수 7개 (캐릭터·진단·처방·환경·체크리스트·월간 리포트·새 식물 종류) + AiError
  * 사용하는 파일: ai/normalize.js, ai/prompts.js, ai/provider.js, ai/json.js
- * 담당: C2
  *
  * 사용 예)
  *   import { diagnose, AiError } from '../core/ai.js';

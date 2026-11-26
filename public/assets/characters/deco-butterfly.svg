@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 70" role="img" aria-label="나비 친구">
-  <!-- Lv.5 소품: 나비 친구 (C6) -->
+  <!-- Lv.5 소품: 나비 친구 -->
   <ellipse cx="24" cy="24" rx="20" ry="16" fill="#C9B8F2" transform="rotate(-20 24 24)"/>
   <ellipse cx="56" cy="24" rx="20" ry="16" fill="#C9B8F2" transform="rotate(20 56 24)"/>
   <ellipse cx="27" cy="48" rx="13" ry="10" fill="#B4E0F2" transform="rotate(20 27 48)"/>

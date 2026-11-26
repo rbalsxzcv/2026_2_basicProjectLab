@@ -4,9 +4,8 @@
  *       - mock 모드: public/mocks/*.json 가짜 응답 + 코드로 그린 캐릭터 SVG
  *       - real 모드: Firebase AI Logic (Gemini Developer API)
  * 사용하는 파일: core/firebase.js, core/ai-config.js, ai/json.js, ai/usage.js
- * 담당: C2
  *
- * ★ 페이지·서비스는 이 파일을 직접 부르지 말고 core/ai.js 의 함수를 쓰세요. (예외: P2 프롬프트 실험실)
+ * ★ 페이지·서비스는 이 파일을 직접 부르지 말고 core/ai.js 의 함수를 쓰세요. (예외: pages/prompt-lab.js 프롬프트 실험실)
  * ★ 사진이나 프롬프트 본문은 절대 콘솔에 찍지 않습니다. (길이만)
  *
  * 이 파일이 던지는 오류에는 code 가 붙어 있고, core/ai.js 가 한국어 안내 문구로 바꿉니다.

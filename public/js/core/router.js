@@ -2,7 +2,6 @@
  * 파일: public/js/core/router.js
  * 역할: 해시 라우터 — 주소(#/경로)가 바뀌면 페이지 모듈을 불러와 <main id="page"> 에 그립니다.
  * 사용하는 파일: core/routes.js, core/store.js, ui/layout.js, utils/dom.js
- * 담당: C1
  *
  * 내보내는 함수: startRouter(), navigate(path), getCurrentPath(), consumeReturnTo()
  *              (+ getCurrentPageInfo(): app.js 가 로그아웃 때 현재 화면이 로그인 필요 화면인지 확인)

@@ -2,7 +2,6 @@
  * 파일: public/js/services/aiHistory.js
  * 역할: AI 분석 결과의 "짧은 요약" 기록 — plants/{id}/aiHistory/{historyId} (원칙 4: AI 맥락 저장)
  * 사용하는 파일: core/firebase.js, core/store.js, utils/date.js
- * 담당: C5
  *
  * ★ 사진(data URL)은 절대 넣지 않습니다. 다음 AI 호출 때 최근 몇 개만 함께 보냅니다.
  *   문서 모양: { type: 'PHOTO_DIAGNOSIS'|'ENVIRONMENT'|'CHECKLIST', summary: {...}, createdAt }

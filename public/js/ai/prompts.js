@@ -2,7 +2,6 @@
  * 파일: public/js/ai/prompts.js
  * 역할: public/prompts/<이름>.<버전>.txt 템플릿을 불러와 {변수}를 채움
  * 사용하는 파일: core/ai-config.js
- * 담당: C2
  *
  * 예) fill('advice', { speciesName: '몬스테라', symptoms: '잎 끝 갈변', ... })
  *     → advice.v1.txt 안의 {speciesName} 이 '몬스테라' 로 바뀐 글자

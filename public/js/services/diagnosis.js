@@ -2,7 +2,6 @@
  * 파일: public/js/services/diagnosis.js
  * 역할: 사진 진단의 AI 호출(관찰 → 처방)과 aiHistory 에 남길 요약 만들기 (화면 없음)
  * 사용하는 파일: core/ai.js, services/aiHistory.js
- * 담당: P1
  *
  * ※ Firestore 저장은 ui/diagnosis-flow.js 가 photos · aiHistory 서비스를 불러서 합니다.
  */

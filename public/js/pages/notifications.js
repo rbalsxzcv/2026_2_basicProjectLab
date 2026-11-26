@@ -4,7 +4,6 @@
  *       알림 탭 → 읽음 처리 + 해당 화면으로 이동
  * 사용하는 파일: services/notifications.js, ui/components.js, utils/dom.js, utils/date.js,
  *               css/pages/notifications.css
- * 담당: P4
  *
  * ★ Firestore 는 services/notifications.js 에서만 접근. 이 화면은 불러와서 그림.
  * ★ 안 읽은 개수 뱃지(상단 🔔)는 core/startup.js 가 watchUnreadCount 로 관리 — 여기선 안 읽음.

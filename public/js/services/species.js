@@ -3,12 +3,11 @@
  * 역할: 표준 식물 DB(public/data/plant-species.json) 읽기·검색, AI용 생육 기준 요약
  *       + 목록에 없는 식물을 AI로 만들어 내 식물 도감(users/{uid}/customSpecies)에 추가
  * 사용하는 파일: public/data/plant-species.json, core/firebase.js, core/store.js, core/ai.js
- * 담당: C4
  *
- * ※ 기본 식물 목록은 Firestore 가 아니라 정적 JSON 파일을 읽습니다. (00_MAIN §3 프로토타입 단순화)
+ * ※ 기본 식물 목록은 Firestore 가 아니라 정적 JSON 파일을 읽습니다. (서버 없는 프로토타입 구조)
  * ※ AI로 추가한 식물은 사용자마다 users/{uid}/customSpecies/{speciesId} 에 저장됩니다.
  *   loadSpecies / getSpecies / searchSpecies 는 기본 목록 + 내가 추가한 식물을 함께 돌려주므로
- *   다른 화면은 지금처럼 이 함수들만 부르면 됩니다. (AI로 만든 종류의 id 는 'ai-' + 대표 이름)
+ *   다른 화면은 이 함수들만 부르면 됩니다. (AI로 만든 종류의 id 는 'ai-' + 대표 이름)
  * ※ AI 결과는 바로 저장하지 않고, 사용자가 확인한 뒤에만 저장합니다. (previewSpeciesByName → saveSpeciesDraft)
  */
 

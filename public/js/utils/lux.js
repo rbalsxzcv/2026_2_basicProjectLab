@@ -2,7 +2,6 @@
  * 파일: public/js/utils/lux.js
  * 역할: 조도(밝기) 측정 — 1순위 AmbientLightSensor, 2순위 후면 카메라 3초 평균, 3순위 수동 프리셋
  * 사용하는 파일: 없음 (브라우저 Web API 사용)
- * 담당: P5
  */
 
 export const MANUAL_PRESETS = [

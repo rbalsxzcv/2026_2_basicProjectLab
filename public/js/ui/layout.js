@@ -2,7 +2,6 @@
  * 파일: public/js/ui/layout.js
  * 역할: 상단 바(제목, 알림 🔔 + 뱃지)와 하단 메뉴(5개)를 그리고 상태를 바꿈
  * 사용하는 파일: utils/dom.js
- * 담당: C1
  *
  * 내보내는 함수: renderShell(), setTitle(text), setNavVisible(bool), setActiveNav(path), setBadge(count)
  */

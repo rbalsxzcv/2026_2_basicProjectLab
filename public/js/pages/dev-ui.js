@@ -4,11 +4,9 @@
  * 사용하는 파일: ui/components.js, ui/celebrate.js, core/ai.js, core/weather.js, core/ai-config.js, ai/usage.js,
  *               services/(plants, game, checklists, notifications, species, environments, aiHistory, reports, dev-tools).js,
  *               utils/(dom, date, image, envScore).js
- * 담당: C1 (공용 UI) · C2 (AI) · C5 (공용 테스트 + 페이지 구역) · C6 (게임 테스트)
  *
- * ★ 배포할 때는 core/routes.js 에서 '/dev' 줄을 지우세요. (개발용 화면)
- * ★ 화면은 <section data-dev-section="..."> 구역으로 나뉩니다.
- *   각 페이지 담당자는 "자기 구역 함수 안쪽만" 고칩니다. 다른 구역은 건드리지 않습니다.
+ * ★ 개발용 화면입니다. 메뉴에는 없고 주소(#/dev)로만 들어옵니다.
+ * ★ 화면은 <section data-dev-section="..."> 구역으로 나뉘고, 구역마다 그리는 함수가 하나씩 있습니다.
  */
 
 import { html, on } from '../utils/dom.js';
@@ -92,10 +90,10 @@ function sampleImage() {
 
 const loggedOutNote = html`<p class="muted">로그인하면 쓸 수 있어요.</p>`;
 
-// ===== [C1] 공용 UI =====
+// ===== 공용 UI =====
 function renderComponentsSection(root) {
   root.innerHTML = html`
-    <h2 class="dev-title">🧩 공용 UI (C1)</h2>
+    <h2 class="dev-title">🧩 공용 UI</h2>
     <div class="stack">
       <div class="row dev-wrap">
         <button type="button" class="btn btn-primary">기본 버튼</button>
@@ -179,7 +177,7 @@ function renderComponentsSection(root) {
   });
 }
 
-// ===== [C2] AI · 날씨 =====
+// ===== AI · 날씨 =====
 function usageText(usage) {
   return `오늘 실제 AI 사용량 — 글 ${usage.text}/${usage.limits.text}, 사진 ${usage.vision}/${usage.limits.vision}, 이미지 ${usage.image}/${usage.limits.image}`;
 }
@@ -192,7 +190,7 @@ function renderAiSection(root) {
     const aiMode = getAiMode();
     const weatherMode = getWeatherMode();
     root.innerHTML = html`
-      <h2 class="dev-title">🤖 AI · 날씨 테스트 (C2)</h2>
+      <h2 class="dev-title">🤖 AI · 날씨 테스트</h2>
       <div class="stack">
         <p class="muted">스위치는 내 브라우저에만 저장돼요. (ai-config.js 를 고칠 필요 없음)</p>
         <label class="toggle"><input type="checkbox" data-mode="ai" ${aiMode === 'real' ? 'checked' : ''} /><span></span> AI 모드: <strong>${aiMode}</strong></label>
@@ -298,15 +296,15 @@ function renderAiSection(root) {
   draw();
 }
 
-// ===== [C5] 공용 테스트 (현재 식물) =====
+// ===== 공용 테스트 (현재 식물) =====
 function renderSharedSection(root) {
   if (!store.get('user')) {
-    root.innerHTML = html`<h2 class="dev-title">🧪 공용 테스트 (C5)</h2>${loggedOutNote}`;
+    root.innerHTML = html`<h2 class="dev-title">🧪 공용 테스트</h2>${loggedOutNote}`;
     return;
   }
   const plant = getCurrentPlant();
   root.innerHTML = html`
-    <h2 class="dev-title">🧪 공용 테스트 (C5)</h2>
+    <h2 class="dev-title">🧪 공용 테스트</h2>
     <p class="muted">현재 식물: <strong>${plant?.name ?? '없음'}</strong></p>
     <div class="row dev-wrap">
       <button type="button" class="btn btn-secondary btn-sm" data-shared="water-today">물주기 예정일을 오늘로</button>
@@ -342,17 +340,17 @@ function renderSharedSection(root) {
   });
 }
 
-// ===== [C6] 게임 테스트 =====
+// ===== 게임 테스트 =====
 function renderGameSection(root) {
   if (!store.get('user')) {
-    root.innerHTML = html`<h2 class="dev-title">🎮 게임 테스트 (C6)</h2>${loggedOutNote}`;
+    root.innerHTML = html`<h2 class="dev-title">🎮 게임 테스트</h2>${loggedOutNote}`;
     return;
   }
 
   function draw() {
     const plant = getCurrentPlant();
     root.innerHTML = html`
-    <h2 class="dev-title">🎮 게임 테스트 (C6)</h2>
+    <h2 class="dev-title">🎮 게임 테스트</h2>
     <p class="muted">
       메인 화면은 열릴 때마다 상태를 다시 계산하므로, 상태를 직접 바꾸지 않고 "원인"을 만드는 버튼이에요.
       WAITING 은 위의 [물주기 예정일을 3일 전으로] 를 쓰세요.
@@ -401,14 +399,14 @@ function renderGameSection(root) {
   draw();
 }
 
-// ===== [P1] 성장 캘린더 테스트 — P1 담당자만 수정 =====
+// ===== 성장 캘린더 테스트 =====
 function renderP1Section(root) {
   if (!store.get('user')) {
-    root.innerHTML = html`<h2 class="dev-title">📅 [P1] 성장 캘린더</h2>${loggedOutNote}`;
+    root.innerHTML = html`<h2 class="dev-title">📅 성장 캘린더</h2>${loggedOutNote}`;
     return;
   }
   root.innerHTML = html`
-    <h2 class="dev-title">📅 [P1] 성장 캘린더</h2>
+    <h2 class="dev-title">📅 성장 캘린더</h2>
     <p class="muted">사진 진단 mock 은 diagnose-1(정상) / diagnose-2(관찰 필요) 중 하나를 무작위로 사용해요.</p>
     <div class="row dev-wrap">
       <button type="button" class="btn btn-secondary btn-sm" data-p1-delete>오늘 사진 기록 지우기</button>
@@ -428,23 +426,23 @@ function renderP1Section(root) {
   });
 }
 
-// ===== [P2] 프롬프트 실험실 테스트 — P2 담당자만 수정 =====
+// ===== 프롬프트 실험실 =====
 function renderP2Section(root) {
   root.innerHTML = html`
-    <h2 class="dev-title">🧫 [P2] 프롬프트 실험실</h2>
+    <h2 class="dev-title">🧫 프롬프트 실험실</h2>
     <p class="muted">템플릿 버전을 비교하고 응답 JSON 모양을 확인해요.</p>
     <a class="btn btn-primary btn-sm" href="#/prompt-lab">프롬프트 실험실 열기</a>
   `;
 }
 
-// ===== [P3] 체크리스트 테스트 — P3 담당자만 수정 =====
+// ===== 체크리스트 테스트 =====
 function renderP3Section(root) {
   if (!store.get('user')) {
-    root.innerHTML = html`<h2 class="dev-title">✅ [P3] 체크리스트</h2>${loggedOutNote}`;
+    root.innerHTML = html`<h2 class="dev-title">✅ 체크리스트</h2>${loggedOutNote}`;
     return;
   }
   root.innerHTML = html`
-    <h2 class="dev-title">✅ [P3] 체크리스트</h2>
+    <h2 class="dev-title">✅ 체크리스트</h2>
     <p class="muted">현재 식물 기준으로 테스트해요. 결과를 <a href="#/checklist">체크리스트 화면</a>에서 확인하세요.</p>
     <div class="row dev-wrap">
       <button type="button" class="btn btn-secondary btn-sm" data-p3="regen">오늘 체크리스트를 AI로 다시 만들기</button>
@@ -475,20 +473,20 @@ function renderP3Section(root) {
         toast('비료·잎 닦기 예정일을 오늘로 바꿨어요 (체크리스트를 다시 만들면 반영돼요)', 'success');
       }
     } catch (error) {
-      console.warn('[dev] [P3] 테스트 실패', error);
+      console.warn('[dev] 체크리스트 테스트 실패', error);
       pre.textContent = `실패: ${error.message}`;
     }
   });
 }
 
-// ===== [P4] 알림 테스트 — P4 담당자만 수정 =====
+// ===== 알림 테스트 =====
 function renderP4Section(root) {
   if (!store.get('user')) {
-    root.innerHTML = html`<h2 class="dev-title">🔔 [P4] 알림</h2>${loggedOutNote}`;
+    root.innerHTML = html`<h2 class="dev-title">🔔 알림</h2>${loggedOutNote}`;
     return;
   }
   root.innerHTML = html`
-    <h2 class="dev-title">🔔 [P4] 알림</h2>
+    <h2 class="dev-title">🔔 알림</h2>
     <p class="muted">현재 식물 기준으로 테스트해요. 결과는 <a href="#/notifications">알림함</a>에서 확인하세요.</p>
     <div class="row dev-wrap">
       <button type="button" class="btn btn-secondary btn-sm" data-p4="clear">알림 모두 읽음 처리</button>
@@ -515,21 +513,21 @@ function renderP4Section(root) {
         toast('테스트 알림을 만들었어요', 'success');
       }
     } catch (error) {
-      console.warn('[dev] [P4] 테스트 실패', error);
+      console.warn('[dev] 알림 테스트 실패', error);
       pre.textContent = `실패: ${error.message}`;
     }
   });
 }
 
-// ===== [P5] 환경 분석 테스트 — P5 담당자만 수정 =====
+// ===== 환경 분석 테스트 =====
 function renderP5Section(root) {
   if (!store.get('user')) {
-    root.innerHTML = html`<h2 class="dev-title">☀️ [P5] 환경 분석</h2>${loggedOutNote}`;
+    root.innerHTML = html`<h2 class="dev-title">☀️ 환경 분석</h2>${loggedOutNote}`;
     return;
   }
 
   root.innerHTML = html`
-    <h2 class="dev-title">☀️ [P5] 환경 분석</h2>
+    <h2 class="dev-title">☀️ 환경 분석</h2>
     <p class="muted">카메라 없이 가짜 조도(lux 300 / 2,000 / 20,000)로 점수·AI 조언·저장을 한 번에 시험해요.</p>
     <div class="row dev-wrap">
       <button type="button" class="btn btn-secondary btn-sm" data-p5-lux="300">가짜 측정값 분석 (300 lux · 부족)</button>
@@ -618,22 +616,22 @@ function renderP5Section(root) {
       });
       toast(`가짜 측정(${lux} lux) 분석 및 저장 완료`, 'success');
     } catch (error) {
-      console.warn('[dev][P5] 테스트 실패', error);
+      console.warn('[dev] 환경 분석 테스트 실패', error);
       pre.textContent = `실패: ${error.message}`;
     }
   });
 }
 
-// ===== [P6] 월간 리포트 테스트 — P6 담당자만 수정 =====
+// ===== 월간 리포트 테스트 =====
 function renderP6Section(root) {
   if (!store.get('user')) {
-    root.innerHTML = html`<h2 class="dev-title">📄 [P6] 월간 리포트</h2>${loggedOutNote}`;
+    root.innerHTML = html`<h2 class="dev-title">📄 월간 리포트</h2>${loggedOutNote}`;
     return;
   }
 
   root.innerHTML = html`
-    <h2 class="dev-title">📄 [P6] 월간 리포트</h2>
-    <p class="muted">P3 없이도 리포트를 시험할 수 있도록 지난달 샘플 기록을 만들고 지웁니다.</p>
+    <h2 class="dev-title">📄 월간 리포트</h2>
+    <p class="muted">실제 체크리스트 기록 없이도 리포트를 시험할 수 있도록 지난달 샘플 기록을 만들고 지웁니다.</p>
     <div class="row dev-wrap">
       <button type="button" class="btn btn-secondary btn-sm" data-p6="make-sample">지난달 샘플 기록 만들기</button>
       <button type="button" class="btn btn-secondary btn-sm" data-p6="clear-sample">샘플 기록 지우기</button>
@@ -675,7 +673,7 @@ function renderP6Section(root) {
         toast(`${lastMonth} 리포트를 지웠어요`, 'success');
       }
     } catch (error) {
-      console.warn('[dev][P6] 테스트 실패', error);
+      console.warn('[dev] 월간 리포트 테스트 실패', error);
       pre.textContent = `실패: ${error.message}`;
     }
   });
@@ -704,7 +702,7 @@ export default {
   async render(container) {
     container.innerHTML = html`
       <div class="dev-page stack">
-        <p class="muted">개발용 화면이에요. 배포할 때는 routes.js 에서 /dev 를 지워 주세요.</p>
+        <p class="muted">개발용 화면이에요. 앱 메뉴에는 나오지 않아요.</p>
         ${SECTIONS.map(([id]) => html`<section class="card stack" data-dev-section="${id}"></section>`)}
       </div>
       <style>

@@ -2,7 +2,6 @@
  * 파일: public/js/pages/login.js
  * 역할: 로그인 화면 (#/login)
  * 사용하는 파일: services/auth.js, utils/dom.js
- * 담당: C3
  *
  * ★ 로그인에 성공하면 app.js 의 로그인 감시가 알아서 다음 화면으로 보냅니다. 여기서 navigate 하지 않음.
  */

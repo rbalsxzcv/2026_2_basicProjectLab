@@ -2,11 +2,10 @@
  * 파일: public/js/core/ai-config.js
  * 역할: AI·날씨 동작 모드, 프롬프트 버전, 모델 이름, 하루 호출 한도를 한곳에서 관리
  * 사용하는 파일: 없음
- * 담당: C2
  *
- * ★ main 브랜치에는 항상 AI_MODE = 'mock' 으로 둡니다.
- *   실제 AI 는 이 파일을 고치지 말고 #/dev 화면의 스위치로 켭니다 (내 브라우저 localStorage 에만 저장).
- * real 모드 준비·모델 이름 고르는 법: manual/03-real-ai-mode.md
+ * ★ 기본값은 AI_MODE = 'mock' 입니다.
+ *   실제 AI 는 #/dev 화면의 스위치로 브라우저마다 켭니다 (그 브라우저의 localStorage 에만 저장).
+ * real 모드 준비·모델 이름 고르는 법: README "실제 AI(real) 모드"
  */
 
 export const AI_MODE = 'mock'; // 'mock' = 가짜 응답 / 'real' = Firebase AI Logic

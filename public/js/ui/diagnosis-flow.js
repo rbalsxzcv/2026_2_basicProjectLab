@@ -1,12 +1,10 @@
 /**
  * 파일: public/js/ui/diagnosis-flow.js
  * 역할: 대화형 사진 진단 흐름 — 사진 고르기 → 미리보기 → AI 관찰 → 흙 상태 질문 → 오늘의 가이드 → 저장·경험치
- *       성장 캘린더(P1)와 체크리스트(P3)가 함께 씁니다.
+ *       성장 캘린더와 체크리스트가 함께 씁니다.
  * 사용하는 파일: services/diagnosis.js, services/photos.js, services/aiHistory.js, services/game.js,
  *               services/images.js, ui/components.js, ui/celebrate.js, utils/image.js, utils/date.js, utils/dom.js
- * 담당: P1
  *
- * ★ runDiagnosisFlow 의 이름·인자·반환 형식은 00_MAIN 계약 그대로 유지합니다.
  * ★ AI 는 사진만 보고 단정하지 않습니다. 관찰 → 사용자에게 흙 상태 질문 → 두 정보를 합쳐 처방.
  */
 
@@ -136,7 +134,7 @@ async function askDiagnosis({ plant, speciesName, dataUrl, nav }) {
   hideLoading();
   if (nav.left) return CANCELLED;
 
-  // 저장 모양 = 00_MAIN §5.5 photos.diagnosis
+  // 저장 모양 = photos 문서의 diagnosis 필드
   const diagnosis = {
     symptoms: first.symptoms,
     severity: first.severity,

@@ -1,8 +1,7 @@
 /**
  * 파일: public/js/services/game.js
- * 역할: 경험치(EXP) · 레벨 · 성장 단계 · 캐릭터 상태 머신 (00_MAIN §5.6)
+ * 역할: 경험치(EXP) · 레벨 · 성장 단계 · 캐릭터 상태 머신
  * 사용하는 파일: core/firebase.js, core/store.js, services/schedules.js
- * 담당: C6
  *
  * ★ 게임 숫자(경험치·레벨 기준)는 이 파일에만 정의합니다. 다른 파일은 여기서 가져다 씁니다.
  * ★ 벌점·감점은 없습니다(Anti-Guilt). 일정이 밀려도 캐릭터는 "차분히 기다리는 중"일 뿐입니다.
@@ -12,7 +11,7 @@ import { db, doc, getDoc, updateDoc, runTransaction, serverTimestamp, Timestamp 
 import { store } from '../core/store.js';
 import { hasOverdue } from './schedules.js';
 
-// ───────── 상수 (00_MAIN §5.6 과 같아야 함) ─────────
+// ───────── 상수 ─────────
 
 export const EXP = { DAILY: 5, PERIODIC: 20, PHOTO: 15, PET: 0 };
 export const EXP_PER_LEVEL = 100;
@@ -149,7 +148,7 @@ export async function markCared(plantId) {
   patchPlantInStore(plantId, { lastCareAt: Timestamp.now() });
 }
 
-// 관찰 필요(ALERT) 켜기/끄기 — P1 사진 진단에서 사용
+// 관찰 필요(ALERT) 켜기/끄기 — 사진 진단에서 사용
 export async function setAlert(plantId, isOpen) {
   await updateDoc(plantRef(plantId), { alertOpen: Boolean(isOpen) });
   patchPlantInStore(plantId, { alertOpen: Boolean(isOpen) });

@@ -3,9 +3,8 @@
  * 역할: AI 기능별 규칙 — 입력 확인(validate), 프롬프트 변수 만들기(buildVars),
  *       기본값(defaults), 응답 다듬기(normalize). + 응답 모양 검사(checkShape, 프롬프트 실험실용)
  * 사용하는 파일: 없음
- * 담당: C2
  *
- * ★ 반환 모양은 00_MAIN §5.4 와 같아야 합니다. AI가 엉뚱하게 답해도 normalize 가 모양을 맞춥니다.
+ * ★ 반환 모양은 README "AI와 날씨 함수" 표와 같아야 합니다. AI가 엉뚱하게 답해도 normalize 가 모양을 맞춥니다.
  */
 
 export const DAILY_TASK_TYPES = ['VENTILATE', 'CHECK_LEAF', 'CHECK_LIGHT', 'MIST'];
@@ -205,7 +204,7 @@ const RESTRICTED_CONTAINS = [
 ];
 const RESTRICTED_EXACT = ['양귀비', '코카', 'coca', '헴프', 'hemp', 'papaversomniferum']; // '개양귀비'·'꽃양귀비'는 허용
 
-// 겁주거나 죄책감을 주는 표현 (00_MAIN §6 금지어) — AI 가 쓴 글에 있으면 기본 문구로 바꿈
+// 겁주거나 죄책감을 주는 표현 (Anti-Guilt 금지어) — AI 가 쓴 글에 있으면 기본 문구로 바꿈
 const FORBIDDEN_WORDS = ['죽음', '죽어', '죽는', '죽을', '죽었', '시듦', '시들', '실패', '경고', '벌점', '망가'];
 
 const compact = (text) => String(text ?? '').replace(/\s+/g, '').toLowerCase();
@@ -327,7 +326,7 @@ const species = {
 
 export const RULES = { character, diagnose, advice, environment, checklist, 'monthly-report': monthlyReport, species };
 
-// ───────── 모양 검사 (P2 프롬프트 실험실이 "AI 원래 응답"을 검사할 때 사용) ─────────
+// ───────── 모양 검사 (프롬프트 실험실이 "AI 원래 응답"을 검사할 때 사용) ─────────
 // 반환: 문제점(한국어) 배열. 빈 배열이면 통과.
 export function checkShape(name, obj) {
   const issues = [];

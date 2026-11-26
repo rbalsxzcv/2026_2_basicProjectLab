@@ -2,7 +2,6 @@
  * 파일: public/js/pages/profile.js
  * 역할: 내 정보 화면 (#/profile) — 닉네임·집 정보 보기/수정, 비밀번호 변경, 메뉴, 로그아웃
  * 사용하는 파일: core/store.js, core/router.js, services/users.js, services/auth.js, ui/components.js, utils/dom.js, utils/date.js
- * 담당: C3
  */
 
 import { html, on } from '../utils/dom.js';

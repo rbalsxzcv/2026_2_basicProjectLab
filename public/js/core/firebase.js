@@ -2,13 +2,12 @@
  * 파일: public/js/core/firebase.js
  * 역할: Firebase 초기화(app, auth, db, App Check, AI)와 자주 쓰는 함수 다시 내보내기
  * 사용하는 파일: core/firebase-config.js (+ Firebase 공식 CDN 모듈)
- * 담당: C1
  *
  * ★ 다른 모든 파일은 Firebase 함수를 "이 파일에서만" 가져옵니다.
  *   예) import { db, doc, getDoc } from '../core/firebase.js';
  *   그래서 CDN 주소와 SDK 버전은 이 파일 한 곳에만 있습니다.
  *
- * localhost 에서 AI real 모드를 쓰려면 App Check 디버그 토큰 등록이 필요합니다 → manual/03-real-ai-mode.md
+ * localhost 에서 AI real 모드를 쓰려면 App Check 디버그 토큰 등록이 필요합니다 → README "실제 AI(real) 모드"
  */
 
 // SDK 버전은 여기 한 곳에서만 바꿉니다. (공식 CDN 예제: https://firebase.google.com/docs/web/alt-setup)

@@ -5,7 +5,6 @@
  * 사용하는 파일: core/store.js, core/router.js, services/plants.js, services/checklists.js,
  *               services/species.js, ui/components.js, ui/celebrate.js, ui/diagnosis-flow.js,
  *               utils/dom.js, utils/date.js, css/pages/checklist.css
- * 담당: P3
  *
  * ★ 완료 로직은 services/checklists.js 의 completeItem 이 처리. 이 화면은 버튼 동작과 그림만.
  * ★ Anti-Guilt: 벌점·경고색 없음. 밀린 일정은 "차분히 기다리는 중"으로만 표현.
@@ -198,7 +197,7 @@ export default {
     async function handleComplete(item, btn) {
       if (busy) return;
 
-      // 자정 넘김: 버튼을 눌렀을 때 날짜가 바뀌어 있으면 새로고침 (지침 §5)
+      // 자정 넘김: 버튼을 눌렀을 때 날짜가 바뀌어 있으면 새로고침
       if (today() !== screenDate) {
         toast('날짜가 바뀌었어요', 'info');
         location.reload();

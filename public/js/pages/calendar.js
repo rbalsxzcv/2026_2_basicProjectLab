@@ -3,7 +3,6 @@
  * 역할: 성장 캘린더 (#/calendar, ?month=YYYY-MM) — 달력·날짜별 기록·이번 달 타임라인, 오늘 사진 기록(대화형 진단)
  * 사용하는 파일: core/store.js, services/photos.js, services/plants.js, services/species.js,
  *               ui/diagnosis-flow.js, ui/components.js, utils/dom.js, utils/date.js
- * 담당: P1
  *
  * ★ AI 는 [📷 오늘 사진 기록하기] 에서만 부릅니다. 달 이동·날짜 선택·메모 펼치기는 저장된 기록만 읽습니다.
  */

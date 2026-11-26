@@ -2,7 +2,6 @@
  * 파일: public/js/pages/plant-manage.js
  * 역할: 내 식물 관리 (#/plants) — 목록, 보기(선택), 수정, 삭제
  * 사용하는 파일: services/plants.js, services/species.js, ui/components.js, utils/dom.js, utils/date.js
- * 담당: C4
  */
 
 import { html, on } from '../utils/dom.js';

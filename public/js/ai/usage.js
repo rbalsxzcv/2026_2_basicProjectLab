@@ -2,7 +2,6 @@
  * 파일: public/js/ai/usage.js
  * 역할: 실제 AI 호출의 하루 사용량 세기 (비용 안전장치)
  * 사용하는 파일: core/ai-config.js, utils/date.js
- * 담당: C2
  *
  * ※ 이 한도는 "브라우저마다" 세는 부드러운 안전장치입니다. (다른 브라우저/기기에서는 따로 셈)
  *   진짜 한도는 Firebase 콘솔 / Google Cloud 콘솔의 할당량(Quota) 설정에서도 걸 수 있습니다.
